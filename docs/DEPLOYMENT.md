@@ -1,4 +1,4 @@
-# Quorail V2 — Operations & Deployment
+# Quorail V3 — Operations & Deployment
 
 Quorail is a single-business Arc Testnet pilot. **Never use an everyday wallet private key or real mainnet funds.** A working deployed app does not establish an audited or secure mainnet treasury.
 

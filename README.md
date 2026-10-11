@@ -2,7 +2,7 @@
 
 # QUORAIL
 
-### Money moves. Everything changes.
+### Know what money changes.
 
 **An autonomous financial consequence engine for USDC-powered businesses on Arc.**
 
@@ -46,7 +46,7 @@ The product is designed around a simple principle:
 | **Bounded Authority** | A Solidity vault enforces a recipient allowlist, per-payment limit, daily limit, emergency pause and payment-specific owner approvals. |
 | **Decision Ledger** | Associates each agent decision with its rationale, alternatives, financial snapshot and execution status. |
 | **Arc USDC Settlement** | Broadcasts permitted transfers on Arc Testnet; a successful onchain payment receives an actual transaction hash. |
-| **Interactive Financial Map** | A custom scroll-driven visual language reveals how financial commitments compete for the same capital. |
+| **Interactive Financial Map** | A selectable, counterfactual capital map with keyboard-accessible nodes shows the relationship between obligations, reserve and projected liquidity. |
 
 ### The three decisions
 
@@ -95,11 +95,11 @@ Arc Testnet USDC ---- Treasury state ---- Consequence engine
 
 ### The design language
 
-Quorail's interface is conceived as a financial instrument, not a generic crypto dashboard. Aubergine ink, smoked parchment, and saffron signals frame a selectable consequence network; coral marks financial stress and saltwater marks protected capacity. The landing page uses scroll position to change financial states, while the Control Room prioritizes traceable information over decorative charts. The visual story and the transaction logic express the same idea: **each choice changes the shape of future liquidity**.
+Quorail's interface is conceived as a financial instrument, not a generic crypto dashboard. Porcelain surfaces, oceanographic blue, mineral sea-glass, and restrained coral turn the treasury into an instrument. The interface resembles a navigable financial field, not a generic finance dashboard. The landing page responds to scroll progress and showcases a selectable consequence map: compare paying all recorded obligations with a what-if scenario that defers a selected obligation outside the horizon. These are illustrative calculations, not payment instructions. The Control Room prioritizes auditable information and accessible interactions over decoration. The visual story and the transaction logic express the same idea: **each choice changes the shape of future liquidity**.
 
 ## Explore the product
 
-**V2 experience.** The public site opens directly into an interactive commitment map with no long, empty scroll spacer. The treasury workspace is **wallet-first**: the owner of the deployed vault signs a non-transaction authentication message, while other visitors can enter an isolated, local-only sandbox. Quorail does not require anyone to paste a private key into a browser UI.
+**V3 — Pelagic Ledger.** The public site opens directly into an interactive commitment map with no long, empty scroll spacer. The treasury workspace is **wallet-first**: the owner of the deployed vault signs a non-transaction authentication message, while other visitors can enter an isolated, local-only sandbox. Quorail does not require anyone to paste a private key into a browser UI.
 
 - **Overview:** verified balance (owner workspace), near-term obligations, protected reserves, consequence field.
 - **What if?:** adjustable spending and incoming-capital projections; simulations do not send transactions.
@@ -121,7 +121,7 @@ The single-organization implementation is an **Arc Testnet pilot**, not audited 
 Quorail has **two clearly separated operating modes**:
 
 - **Demonstration:** Works without credentials or infrastructure. Financial values and agent assessments are illustrative, no USDC moves, and no transactions are fabricated.
-- **Live testnet pilot:** Requires PostgreSQL, an admin session, a configured Claude API model, an owner-deployed Arc vault, an authorized agent signer and testnet USDC. Real USDC payments can occur only after those pieces are set up and tested.
+- **Live testnet pilot:** Requires PostgreSQL, a vault-owner wallet session, a configured Claude API model, an owner-deployed Arc vault, an authorized agent signer and testnet USDC. Real USDC payments can occur only after those pieces are set up and tested.
 
 **The repository is an implementation, not a claim of deployed funds or customers.** Onchain payment volume and business traction are established only by genuine usage and independently verifiable transactions.
 
@@ -186,8 +186,8 @@ Licensed under [MIT](LICENSE). Built independently; not affiliated with or endor
 
 ## Owner access and visitor privacy
 
-Quorail V2 is **wallet-first, not password-first**. On a configured Arc Testnet deployment, the connected wallet signs a short-lived authentication message, then the server checks the recovered signer against the deployed vault's current `owner()` address. Only that owner may read the private treasury or call the protected financial APIs. Non-owners can choose a clearly labelled, browser-only sandbox. The server returns no private treasury state to unauthenticated visitors. An owner-signature session is not permission to bypass the vault's spending limits.
+Quorail V3 is **wallet-first, not password-first**. On a configured Arc Testnet deployment, the connected wallet signs a short-lived authentication message, then the server checks the recovered signer against the deployed vault's current `owner()` address. Only that owner may read the private treasury or call the protected financial APIs. Non-owners can choose a clearly labelled, browser-only sandbox. The server returns no private treasury state to unauthenticated visitors. An owner-signature session is not permission to bypass the vault's spending limits.
 
-No private key is ever entered into the site. The owner/deployer key remains local. The agent's testnet-only key lives in server-side Vercel secrets. The retired password route returns HTTP 410, and `ADMIN_PASSWORD` is not used by V2. To set up the new login, keep your existing `SESSION_SECRET` and vault address; **do not deploy another vault** just to upgrade the frontend.
+No private key is ever entered into the site. The owner/deployer key remains local. The agent's testnet-only key lives in server-side Vercel secrets. The retired password route returns HTTP 410, and `ADMIN_PASSWORD` is not used by V3. To set up the new login, keep your existing `SESSION_SECRET` and vault address; **do not deploy another vault** just to upgrade the frontend.
 
-The complete design direction lives in [`docs/V2-DESIGN-SYSTEM.md`](docs/V2-DESIGN-SYSTEM.md) and the migration notes in [`docs/V2-RELEASE-NOTES.md`](docs/V2-RELEASE-NOTES.md).
+The current visual system is documented in [`docs/V3-DESIGN-SYSTEM.md`](docs/V3-DESIGN-SYSTEM.md), with an in-place migration checklist in [`docs/V3-RELEASE-NOTES.md`](docs/V3-RELEASE-NOTES.md). Earlier V2 design notes are retained as project history.

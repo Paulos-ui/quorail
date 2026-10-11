@@ -1,4 +1,4 @@
-# Quorail V2 — Live Testnet Checklist
+# Quorail V3 — Live Testnet Checklist
 
 The newest step-by-step live instructions are in [DEPLOYMENT.md](DEPLOYMENT.md). This is a short status checklist for the Arc Testnet pilot.
 

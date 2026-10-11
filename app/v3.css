@@ -1,0 +1,229 @@
+/* QUORAIL V3 — PELAGIC LEDGER
+   A cartographic, oceanographic visual system. White porcelain, deep current ink,
+   glacier-blue instrumentation, mineral green and coral used only for risk.
+   Keeps V2 geometry/motion where it communicates cause and consequence.
+*/
+:root{
+ --paper:#f7f9f7;--paper-2:#edf4f3;--ink:#143246;--forest:#173d50;--forest-deep:#0f3245;
+ --copper:#395cc5;--copper-light:#9abbee;--olive:#6f9f99;--line:#d5e1e1;--muted:#607b88;--mint:#d1eae5;--danger:#b64c60;
+ --q-ink:#15374d;--q-ink2:#102c41;--q-parchment:#f6f8f6;--q-paper:#fff;--q-saffron:#365ec2;--q-mist:#c9ece6;--q-coral:#b64d66;--q-quiet:#728d9d;--q-rule:#cbdadd;
+ --q-font:'DM Sans',sans-serif;--q-serif:'Newsreader',Georgia,serif;
+ --v3-white:#ffffff;--v3-porcelain:#f6f8f6;--v3-ink:#143246;--v3-blue:#365bc5;--v3-marine:#173e56;--v3-frost:#e3f2f0;--v3-tide:#8cd1ce;--v3-peony:#b64d66;--v3-line:#cddddd;
+}
+body{background:var(--v3-porcelain);color:var(--v3-ink)}
+::selection,.qv2-site ::selection{background:#b8e5e4;color:#143246}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,[role="button"]:focus-visible{outline:3px solid #4f80d0;outline-offset:3px}
+.brand-period,.qv2-site .brand-period,.qv2-gate .brand-period{color:#497ed3}
+.brand>span{font-weight:750;letter-spacing:-1.6px}
+.small-heading,.section-number,.qv2-label,.qv2-eyebrow{color:var(--v3-blue)}
+.btn{border-radius:2px}.btn-dark,.qv2-primary{background:var(--v3-blue);color:#fff}.btn-dark:hover,.qv2-primary:hover{background:#2749a7;color:#fff}
+.btn-copper{background:var(--v3-blue);color:#fff}.btn-copper:hover{background:#284ca8}
+/* Navigation / paper is the product's default state */
+.qv2-site{background:var(--v3-porcelain);color:var(--v3-ink)}
+.qv2-header{background:#f7faf9ed;border-color:var(--v3-line);backdrop-filter:blur(18px);height:82px}
+.qv2-nav{color:#3c5d6c}.qv2-nav a:hover{color:#3158bf}
+.qv2-header-right>span{color:#4e7281}.qv2-header-right i,.qv2-field-top i,.qv2-gate-live i{background:#439d99;box-shadow:0 0 0 4px #439d9921}
+.qv2-header-action{background:var(--v3-ink);color:white;border-radius:2px}
+.qv2-header-action:hover{background:#315c79}
+.qv2-menu{color:var(--v3-ink)}
+/* Opening spread: no unused hero void; map is the hero's interactive counterpart */
+.qv2-hero{background:#f6f9f8;color:var(--v3-ink);min-height:min(810px,calc(100svh - 82px));grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr);position:relative}
+.qv2-hero:before{content:"";pointer-events:none;position:absolute;inset:0;background:radial-gradient(ellipse at 76% 56%,rgba(198,235,230,.23),transparent 54%);z-index:0}
+.qv2-hero-left{border-color:#d9e8e7;padding:4% 5% 4.5% 8.2%;position:relative}
+.qv2-hero-left:before{content:"Q / FIELD NOTE 001";position:absolute;bottom:19%;left:8.2%;font:9px var(--mono);letter-spacing:.14em;color:#7296a0}
+.qv2-hero h1{font-size:clamp(66px,6.65vw,115px);line-height:.91;letter-spacing:-.085em;font-weight:600;margin-top:27px;color:#12334b}
+.qv2-hero h1 em,.qv2-site em{color:var(--v3-blue)}
+.qv2-hero-left>p{color:#54707f;font-size:15px;max-width:430px;line-height:1.8;margin-top:29px}
+.qv2-hero .qv2-eyebrow{color:#375ec0;font-weight:700;letter-spacing:.09em}
+.qv2-star{color:#2d7596;font-weight:700}
+.qv2-primary{min-height:56px;box-shadow:6px 6px 0 #d1e6e9;gap:32px}
+.qv2-primary:hover{box-shadow:3px 4px 0 #badadb;transform:translate(2px,2px)}
+.qv2-text-action{color:#31546c;border-color:#8eabb4}
+.qv2-hero-bottom{color:#65808d}.qv2-hero-index{color:#9ab2bc}
+.qv2-hero-right{background:linear-gradient(135deg,rgba(226,241,239,.60),rgba(248,250,249,.25));padding:60px 5% 57px;border-left:1px solid #dce8e7}
+.qv2-hero-right-title{color:#678394;top:27px}.qv2-hero-legend{color:#527488;bottom:22px}
+.qv2-hero .qv3-field{width:min(100%,820px)}
+/* Instrument: light layered cartography, not a dark crypto constellation */
+.qv2-field,.qv3-field{background:#f6fbfa;color:#29495d;border:1px solid #bed5da;box-shadow:12px 13px 0 #c9e4e3;position:relative}
+.qv2-field-top{background:#e7f1f0;color:#31546b;border-color:#c5d9dc;font-size:9px;padding:15px 18px}
+.qv2-field-top>span:last-child{color:#39758a}.qv2-field-tick{color:#829fa8}
+.qv2-field-canvas>svg{color:#6c9eaf;display:block}
+.qv3-svg-node{cursor:pointer}.qv3-svg-node:focus circle:first-child{stroke:#12334b;stroke-width:4}.qv3-svg-node:hover circle:first-child{stroke:#548bd7}
+.qv3-field-options{display:flex;gap:6px;align-items:center;padding:13px 17px;background:#fff;border-top:1px solid #d3e2e4;flex-wrap:wrap}
+.qv3-field-options>span:first-child{font:9px var(--mono);letter-spacing:.08em;color:#5d7b89;margin-right:13px}
+.qv3-field-options button{border:1px solid #c6d9dc;background:#f8fbfb;color:#476a7a;padding:8px 11px;font:9px var(--mono);letter-spacing:.035em;transition:background .2s,border .2s}
+.qv3-field-options button.chosen{background:#244e74;color:#fff;border-color:#244e74}
+.qv3-field-options button:disabled{opacity:.4}
+.qv3-field-hint{margin-left:auto;font:8px var(--mono);color:#809ca3;letter-spacing:.05em}
+.qv2-field-inspector{background:#e8f2f2;border-color:#cbdde0;color:#17445b;min-height:96px}
+.qv2-field-inspector strong{color:#153e5a}.qv2-field-inspector small{color:#678895}
+.qv2-field-outlook>span{color:#557b89}.qv2-field-outlook strong,.qv2-field-outlook strong:not(.qv2-risk){color:#236b8a!important}.qv2-field-outlook strong.qv2-risk{color:#bd465f!important}
+.qv2-field-inspector>svg{color:#4168b9}
+/* The marquee becomes an architectural index tape */
+.qv2-marquee{background:#d7eee9;color:#22435e;border-color:#aacdcf;padding:13px 0}
+.qv2-marquee span{color:#4b7bb9}
+/* Problem chapter */
+.qv2-thesis{background:#e9f3f1;color:#143246;position:relative}
+.qv2-thesis:after{content:"";position:absolute;right:7%;top:130px;width:95px;height:95px;border:1px solid #accdcd;border-radius:50%;pointer-events:none;opacity:.6}
+.qv2-section-head{border-color:#bcd3d6;color:#466879}
+.qv2-marker{color:#476fc2}.qv2-thesis h2 em{color:#426bba}
+.qv2-thesis-right>p{color:#537280}.qv2-thesis-right .qv2-thesis-intro{color:#163a52}
+.qv2-thesis-note{border-color:#b7d2d4}.qv2-thesis-note>span{color:#4262a9}
+/* The decision loop is a pale-blue laboratory, not another dark hero */
+.qv2-engine{background:#dcecf1;color:#163a56}
+.qv2-engine-head,.qv2-engine-bottom{border-color:#bad0d9;color:#5c8398}
+.qv2-engine-steps h2{color:#163850}.qv2-engine-steps em{color:#3c65b4}
+.qv2-step-buttons button{background:#f6faf9;color:#436277;border-color:#b7d2dd}
+.qv2-step-buttons button:hover{background:white}
+.qv2-step-buttons button.selected{background:#294d85;color:#fff;border-color:#294d85}
+.qv2-step-buttons button span{color:#3b68b0}.qv2-step-buttons button.selected span{color:#b7e0f1}
+.qv2-engine-focus{background:#f8fbfa;color:#163950;border-color:#bed6de;box-shadow:14px 14px 0 #b7d8df}
+.qv2-chapter-number{color:#3b5fc1}.qv2-chapter-number span{color:#82a0af}
+.qv2-engine-focus h3{color:#183d58}.qv2-engine-focus p{color:#58788a}
+.qv2-loop-node{border-color:#b2ced6;color:#627f8d;background:#eef6f7}
+.qv2-loop-node.active{background:#375eb7;color:#fff;border-color:#375eb7}
+.qv2-chapter-graphic>span{background:#adcad6}.qv2-chapter-graphic>span.lit{background:#3a68b2}
+/* Proof section: layered white surface and strong blue diagram */
+.qv2-proof{background:#f9faf7;color:#193b55}
+.qv2-proof h2 em{color:#4265b8}.qv2-asterisk{color:#427baa}
+.qv2-proof-heading p{color:#5d7783}
+.qv2-secondary{background:#254f77;color:#fff}
+.qv2-stack{background:#f5fafb;color:#193e54;border-color:#c7dbe2;box-shadow:14px 14px 0 #d5e9ea}
+.qv2-stack-item{border-color:#bfd8df;background:#fff}.qv2-stack-item>span{color:#3b65ba}.qv2-stack-item small{color:#547686}
+.qv2-stack-item.amber{background:#e2f3f0;border-color:#8cbfca}
+.qv2-stack-item.last{background:#254e72;color:#fff}.qv2-stack-item.last small{color:#c2e5ee}.qv2-stack-item.last>span{color:#9ddddd}
+.qv2-stack-link{color:#4073b4}.qv2-stack-link span{color:#74919d}
+/* Product demonstration: blue-tinted chart on the light end of the spectrum */
+.qv2-product{background:#cfe7e6;color:#153a53}
+.qv2-product-left{border-color:#accbce}.qv2-product h2 em{color:#365ebe}.qv2-product p{color:#496d7b}
+.qv2-product-steps{color:#30566a}.qv2-product-steps svg{color:#357e94}
+.qv2-product-preview{background:#f8fcfb;color:#173b51;border-color:#a5cad0;box-shadow:16px 16px 0 #a8d1d4}
+.qv2-preview-bar{border-color:#c4dce1;color:#597c8b}
+.qv2-preview-metrics div{background:#e7f3f1;color:#274e64;border-color:#cadee0}
+.qv2-preview-metrics span{color:#648393}
+.qv2-preview-track{color:#7192a0}.qv2-preview-columns{border-color:#abcbd1}
+.qv2-preview-columns span{background:#496bc2}.qv2-preview-columns span:nth-child(3n){background:#91ccc3}
+.qv2-preview-bottom{color:#668593}
+/* Documentation card + closing */
+.qv2-manual{background:#f3f8f7;color:#163950}.qv2-manual h2 em{color:#3b63b7}
+.qv2-manual p{color:#617a88}.qv2-manual-links a{color:#244d78}
+.qv2-manual-art{background:#234b6c;color:#eaf7f7;box-shadow:20px 20px 0 #d2e6e5}
+.qv2-manual-art strong{color:#b6e2e4}.qv2-manual-art>div{border-color:#79a8b9;color:#bcdbe4}
+.qv2-end{background:#214b69;color:#f8fdfb}.qv2-end-symbol{color:#95d2d0}
+.qv2-end em{color:#b2e4e1}.qv2-end>span{color:#b1d1dc}
+.qv2-end .qv2-primary{background:#e8f6f4;color:#183d57;box-shadow:7px 7px 0 #486f87}.qv2-end .qv2-primary:hover{background:#fff}
+.qv2-footer{background:#f3f8f7;color:#315469;border-color:#cadbdd;border-top:1px solid #d3e2e4}
+.qv2-footer>.brand{color:#19405b}.qv2-footer>.brand svg{color:#19405b}
+/* Wallet-first owner entry: color has function (safe signature ≠ onchain transfer) */
+.qv2-gate{background:#edf6f5;color:#163d53}.qv2-gate-nav{border-color:#c9dddf}
+.qv2-gate-nav>.brand svg{color:#183d56}
+.qv2-gate-grid{grid-template-columns:1fr 1fr}
+.qv2-gate-story{background:#d4ebeb;color:#173d56;border-color:#b6d4da}
+.qv2-gate-story .qv2-label{color:#396bb6}
+.qv2-gate-story h1{color:#193e56}.qv2-gate-story h1 em{color:#4168bd}
+.qv2-gate-story>p{color:#547486}.qv2-gate-facts{color:#456d7c}
+.qv2-gate-orbit{border-color:#86bac6}.qv2-gate-center{background:#2f5c85;color:#f2ffff}
+.qv2-gate-particle.p1{background:#3a6bbd}.qv2-gate-particle.p2{background:#b55066}.qv2-gate-particle.p3{background:#7cbaa9}
+.qv2-gate-choose{background:#f8fbfa;color:#17394e}
+.qv2-gate-choose h2 em{color:#3d64b6}.qv2-gate-choose>p{color:#617b88}
+.qv2-gate-head>.qv2-label{color:#395fb1}.qv2-gate-live{color:#397c88}
+.qv2-wallet-list button{background:white;border-color:#d0e2e4;color:#21475d;border-radius:2px}
+.qv2-wallet-list button:hover{background:#eaf5f7;transform:translateX(4px)}
+.qv2-wallet-emblem{background:#e4f2f0;color:#305baf}
+.qv2-no-wallet{background:#eff7f6;border-color:#c8dfe3}.qv2-no-wallet p{color:#617b86}
+.qv2-gate-error{background:#fae7e9;color:#9a334d}
+.qv2-gate-divider{color:#6d8894}.qv2-gate-divider:before,.qv2-gate-divider:after{background:#cddfe1}
+.qv2-guest{background:#eaf5f2;border-color:#a3ced1;color:#17475b}
+.qv2-guest:hover{background:#d8eded}.qv2-guest small{color:#557580}.qv2-gate-foot{color:#607d89}
+.qv3-chain-note{display:flex;gap:10px;margin-top:18px;padding:14px 16px;border:1px solid #c3dee0;background:#f2f8f8;font-size:11px;line-height:1.65;color:#4f7182}
+.qv3-wallet-status{padding:13px 16px;background:#e9f4f6;border-left:3px solid #4166b7;font-size:11px;line-height:1.6;margin:5px 0 14px}
+/* Operational console stays familiar structurally, becomes much clearer in daylight */
+.console-layout{background:#f3f8f7;color:#173c53}
+.console-sidebar{background:#214c66;border-color:#5b8095;color:#edf9f7}
+.console-sidebar .brand{color:#fff}.console-sidebar .brand svg{color:#def5f0}.console-sidebar .brand-period{color:#91d7d4}
+.sidebar-caption,.sidebar-group-label,.console-sidebar .sidebar-network small{color:#adcdd7}
+.side-workspace{background:#2d617b;border-color:#53819a}.side-workspace strong,.sidebar-footer strong{color:#fff}
+.console-nav button,.console-nav a{color:#c8dfe6}.console-nav button.active{background:#dcf2ef;color:#214e6c}
+.console-nav button:hover,.console-nav a:hover{background:#366883;color:#fff}.console-nav button.active:hover{background:#eaf8f7;color:#164567}
+.sidebar-network{background:#285774;border-color:#51829a}.sidebar-network strong{color:#e7f8f8}
+.console-topbar{background:#f9fcfb;border-color:#cbdfe0}
+.console-breadcrumb{color:#6d8b98}.console-breadcrumb b{color:#244a61}
+.console-body{max-width:1720px}.page-lead h1{color:#173a51}.page-lead h1 em{color:#3c63b9}.page-lead p{color:#607c8a}
+.metric-card{background:#fff;border-color:#d1e2e2;box-shadow:0 6px 22px #2e617408}
+.metric-card .metric-top{color:#648290}.metric-card strong{color:#193f58}
+.metric-primary{background:#2a5376;color:#fff;border-color:#2a5376;box-shadow:8px 8px 0 #c7e6e4}
+.metric-primary strong{color:#f1ffff}.metric-primary .metric-top,.metric-primary .metric-bottom{color:#b9e1e6}
+.metric-bottom{color:#6f8a96}.metric-card .negative{color:#b64d66!important}
+.demo-banner{background:#e8f3f4;border-color:#bfdadb;color:#315e74}.mode-flag.demo{background:#d4ebf5;color:#285d85}.mode-flag.live{background:#dcf3e8;color:#25695d}
+.qv2-field-compact,.dashboard-duo .qv2-field-compact{background:#f6fbfa;border-color:#bad9da;box-shadow:none}
+.liquidity-panel{background:#e6f3f4;color:#193e56;border:1px solid #bdd8df}
+.liquidity-panel h2 em{color:#365eb8}.liquidity-panel p{color:#5e7c8a}
+.liquidity-panel .panel-overline{color:#4b788b}.liquidity-facts{border-color:#b6d4dc}
+.liquidity-facts span{color:#6c8895}.liquidity-facts strong{color:#173f54}
+.liquidity-meter .meter-track{background:#c2dfe0}.liquidity-meter .meter-track>div{background:#3b74b6}
+.panel-bottom-link{color:#244f75}
+.table-card,.policy-card,.decision-card,.vault-info{background:#fff;border-color:#d0e1e3}
+.obligation-table th{color:#64828e}.obligation-table td{border-color:#e2ecea}.decision-head,.decision-footer{border-color:#d0e2e2}
+.policy-highlight{background:#dbeef0;border-color:#a8cdd5;color:#153e5b}
+.policy-highlight h2 em{color:#3b62b8}.policy-card>strong{color:#204d6b}.policy-card h3{color:#234b61}.policy-card p{color:#6a8590}
+.policy-icon{color:#427aaf}
+.decision-disclosure{background:#e8f2f5;border-color:#c7dce4;color:#224e6c}
+.empty-state,.loading-dashboard{background:#f4faf9;color:#27516b}
+.decision-action.pay{background:#d7f1e5;color:#226d60}.decision-action.hold{background:#e3edf7;color:#3869a0}.decision-action.escalate{background:#f7e7e8;color:#ae3e53}
+.qv2-sandbox-tag{background:#dceff1;color:#2b6681}
+.qv2-sim-controls,.qv2-sim-results{background:#fff;border-color:#cddfe3;color:#143d54}
+.qv2-sim-controls h2 em{color:#3e64b4}.qv2-sim-controls>p{color:#627f8d}.qv2-sim-controls label strong{color:#1b475d}
+.qv2-sim-controls input[type=range]{accent-color:#3868bf}.qv2-sim-disclaimer{background:#e4f2f3;color:#527384}
+.qv2-sim-results{background:#224d70;color:#fff}.qv2-sim-results>span:not(.small-heading){color:#aacbd8}
+.qv2-sim-score{background:#456f8a}.qv2-sim-score i{background:#a7ded4}.qv2-sim-results h3{color:#bde4e6}.qv2-sim-results p{color:#c1dce5}
+.qv2-reset{color:#ddf3f6;border-color:#a5cad8}
+.qv2-timeline{border-color:#a0c6d0}.qv2-event{border-color:#d2e3e4}.qv2-event-marker{color:#3f69b7}.qv2-event span{color:#7896a4}.qv2-event p{color:#63808e}
+.qv2-vault-intro{background:#245675;color:#fff}.qv2-vault-intro>span,.qv2-vault-intro svg{color:#b0e1df}.qv2-vault-intro small{color:#cce4e8}
+.qv2-vault-data{background:white;border-color:#cddfe2}.qv2-vault-data>div{border-color:#d9e8e7}.qv2-vault-data span{color:#52788a}.qv2-vault-data code{color:#28526d}
+.qv2-vault-how{background:#e5f3f2;color:#23506b}
+.qv2-vault-allow{background:#fff;border-color:#c8dfe0}.qv2-vault-allow p{color:#597c8c}.qv2-vault-control label{color:#4166a6}
+.qv2-vault-control input{background:#f8fbfa;border-color:#bfd6da;color:#274d66}
+.qv2-vault-control button{background:#325eb4;color:#fff}.qv2-vault-control button+button{color:#a9455f;border-color:#dfb6c0;background:#fff}
+.qv2-switch-owner{background:#285778;color:#f0f9fa}.qv2-switch-owner:hover{background:#3c7593}
+/* Documentation continues the same identity */
+.qv2-docs-progress>div{background:#4265c3}
+.docs-page{background:#f7faf9;color:#163c54}.docs-page .brand{color:#163c54}.docs-page .brand svg{color:#173b55}.docs-page .brand-period{color:#426ac4}
+.docs-header{background:#f8fbfa;border-color:#cbdfe0}
+.docs-hero{background:#dceff1;color:#163b56;padding-block:90px}
+.docs-hero em{color:#395fb9}.docs-hero p{color:#587b8c}.docs-meta{color:#3c658b}
+.docs-aside a{color:#557987;border-color:#cddfe3}.docs-aside a:hover{color:#345db9;border-color:#497cc8;background:#e7f3f6}
+.docs-content section{border-color:#d2e3e3}.docs-content h2,.docs-content h3,.docs-content strong{color:#153b56}
+.docs-content p,.docs-content ul,.docs-content ol{color:#557785}
+.docs-content code{background:#e1f0ef;color:#315f80}.docs-content pre{background:#1f4d6c;color:#effeff}.docs-content pre code{color:inherit;background:transparent}
+.docs-note{background:#e0f2f0;border-color:#5cabb5;color:#275872}.docs-warning{background:#f7e4e8;border-color:#b84b66;color:#983c55}
+.docs-architecture{background:#e5f2f2;border-color:#c6dfe2}.arch-node{background:#244e70}.arch-node.alt{background:#3868b5}
+.docs-back{background:#365eb6}.docs-page .site-footer{background:#204c68;color:#e6f8f7}
+/* Tight responsive behavior, the hierarchy is still meaningful on small screens */
+@media(max-width:1100px){.qv2-hero h1{font-size:clamp(60px,6vw,88px)}.qv2-hero-left{padding-left:7%}.qv2-hero-left:before{left:7%}.qv3-field-hint{flex-basis:100%;margin-left:0;margin-top:4px}}
+@media(max-width:920px){.qv2-nav{background:#f8fbfa;border-color:#d0e0e2}.qv2-hero{grid-template-columns:1fr}.qv2-hero-left{min-height:0;padding:68px 7% 75px}.qv2-hero-left:before{display:none}.qv2-hero-right{border-left:0;border-top:1px solid #c8dddd;max-height:none;padding:70px 8%}.qv2-hero h1{font-size:clamp(67px,10vw,101px)}.qv2-hero-bottom{position:relative;bottom:auto;left:auto;right:auto;margin-top:45px}.qv2-gate-grid{grid-template-columns:1fr}.qv2-gate-story{min-height:0}.qv2-gate-choose{padding:60px 8%}.qv2-engine{height:auto}}
+@media(max-width:560px){.qv2-header{height:70px}.qv2-nav{top:70px}.qv2-hero-left{padding:50px 6% 55px}.qv2-hero h1{font-size:clamp(57px,13vw,80px)}.qv2-hero-left>p{font-size:14px}.qv2-hero-right{padding:63px 3% 55px}.qv2-field{box-shadow:5px 6px 0 #c4e3e0}.qv3-field-options{padding:10px}.qv3-field-options>span:first-child{margin-right:0}.qv3-field-options button{font-size:8px;padding:7px}.qv2-field-inspector{gap:9px}.qv2-hero-bottom{display:none}.qv2-engine-focus{box-shadow:7px 8px 0 #bad9df}.qv2-product-preview{box-shadow:8px 8px 0 #a8d1d4}.qv2-manual-art{box-shadow:9px 9px 0 #d2e6e5}.qv2-gate-story{padding-bottom:30px}.qv2-gate-choose{padding:50px 6%}}
+@media(prefers-reduced-motion:reduce){.qv2-marquee>div{animation:none!important}.qv2-field *{transition:none!important}}
+
+/* Three product guarantees immediately after the first interaction */
+.qv3-proof-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-block:1px solid #b9d6d9;background:#e1f0ee}
+.qv3-proof-strip>div{padding:27px 6vw;display:grid;gap:10px;border-right:1px solid #bdd8db}
+.qv3-proof-strip>div:last-child{border-right:0}
+.qv3-proof-strip span{font:9px var(--mono);letter-spacing:.12em;color:#4578aa}
+.qv3-proof-strip strong{font-size:15px;font-weight:650;color:#224960;letter-spacing:-.025em}
+.qv3-wallet-steps{display:flex;gap:8px;justify-content:space-between;margin-top:34px;border-top:1px solid #c4dce0;padding-top:18px;font:9px var(--mono);color:#517789;letter-spacing:.035em}
+.qv3-wallet-steps span:first-child{color:#365db6;font-weight:700}
+@media(max-width:720px){.qv3-proof-strip{grid-template-columns:1fr}.qv3-proof-strip>div{padding:18px 7%;border-bottom:1px solid #bdd8db;border-right:0}.qv3-proof-strip>div:last-child{border-bottom:0}}
+
+/* Additional framing details inherit the same cool measurement system */
+.qv2-product .qv2-primary{background:#244c74;color:#fff}
+.qv2-preview-chart{border-color:#c1d9dc;background:linear-gradient(180deg,#f7fcfb,#edf7f6)}
+.qv2-preview-track i{background:#a5c8ce}
+.qv2-manual-links a{border-color:#9cbcc6}
+.qv2-gate-spinner,.qv2-spinner{border-top-color:#355ebb}
+.metric-arrow,.tiny-star{color:#7dbdb5}
+.obligation-modal{background:#fafffe;color:#174258}
+.obligation-modal input,.obligation-modal select{background:#f4faf8;border-color:#c9dfe1;color:#244b61}
+.obligation-modal input:focus,.obligation-modal select:focus{border-color:#3976b9}
+.notification.success{background:#e0f1e9;border-color:#a8d7ca;color:#2c705d}
+.notification.error{background:#f9e7eb;border-color:#ebb8c3;color:#a0445d}
+@media(max-width:560px){.qv3-wallet-steps{font-size:8px;gap:4px}.qv2-field-top>span:last-child{font-size:7px}}
