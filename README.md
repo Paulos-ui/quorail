@@ -2,7 +2,7 @@
 
 # QUORAIL
 
-### Every payment has a consequence.
+### Money moves. Everything changes.
 
 **An autonomous financial consequence engine for USDC-powered businesses on Arc.**
 
@@ -95,9 +95,21 @@ Arc Testnet USDC ---- Treasury state ---- Consequence engine
 
 ### The design language
 
-Quorail's interface is conceived as a financial instrument, not a generic crypto dashboard. Limestone and forest-ink surfaces frame an interactive commitment network; copper draws attention to decisions that matter. The landing page uses scroll position to change financial states, while the Control Room prioritizes traceable information over decorative charts. The visual story and the transaction logic express the same idea: **each choice changes the shape of future liquidity**.
+Quorail's interface is conceived as a financial instrument, not a generic crypto dashboard. Aubergine ink, smoked parchment, and saffron signals frame a selectable consequence network; coral marks financial stress and saltwater marks protected capacity. The landing page uses scroll position to change financial states, while the Control Room prioritizes traceable information over decorative charts. The visual story and the transaction logic express the same idea: **each choice changes the shape of future liquidity**.
 
 ## Explore the product
+
+**V2 experience.** The public site opens directly into an interactive commitment map with no long, empty scroll spacer. The treasury workspace is **wallet-first**: the owner of the deployed vault signs a non-transaction authentication message, while other visitors can enter an isolated, local-only sandbox. Quorail does not require anyone to paste a private key into a browser UI.
+
+- **Overview:** verified balance (owner workspace), near-term obligations, protected reserves, consequence field.
+- **What if?:** adjustable spending and incoming-capital projections; simulations do not send transactions.
+- **Obligations:** recipient wallet, due date, priority, amount.
+- **Decision ledger:** pay/hold/escalate rationale, alternatives, actual Arc receipts.
+- **Vault & access:** inspect limits, owner-sign recipient authorization or revocation.
+- **Activity:** inspect the financial audit trail.
+
+The single-organization implementation is an **Arc Testnet pilot**, not audited custody infrastructure or a multi-tenant wallet platform. Non-owner wallets never receive private treasury records.
+
 
 | Route | Experience |
 |---|---|
@@ -171,3 +183,11 @@ These modules can inform invoice workflows, AI procurement, contractor payments 
 **Jayking** · [@paulos-ui](https://github.com/paulos-ui) · [@__official__1](https://x.com/__official__1)
 
 Licensed under [MIT](LICENSE). Built independently; not affiliated with or endorsed by Circle, Arc or Canteen.
+
+## Owner access and visitor privacy
+
+Quorail V2 is **wallet-first, not password-first**. On a configured Arc Testnet deployment, the connected wallet signs a short-lived authentication message, then the server checks the recovered signer against the deployed vault's current `owner()` address. Only that owner may read the private treasury or call the protected financial APIs. Non-owners can choose a clearly labelled, browser-only sandbox. The server returns no private treasury state to unauthenticated visitors. An owner-signature session is not permission to bypass the vault's spending limits.
+
+No private key is ever entered into the site. The owner/deployer key remains local. The agent's testnet-only key lives in server-side Vercel secrets. The retired password route returns HTTP 410, and `ADMIN_PASSWORD` is not used by V2. To set up the new login, keep your existing `SESSION_SECRET` and vault address; **do not deploy another vault** just to upgrade the frontend.
+
+The complete design direction lives in [`docs/V2-DESIGN-SYSTEM.md`](docs/V2-DESIGN-SYSTEM.md) and the migration notes in [`docs/V2-RELEASE-NOTES.md`](docs/V2-RELEASE-NOTES.md).

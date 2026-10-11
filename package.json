@@ -1,8 +1,8 @@
 {
   "name": "quorail",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Quorail — autonomous financial consequence engine on Arc USDC",
+  "description": "Quorail V2 \u2014 wallet-first financial consequence engine and USDC treasury on Arc",
   "scripts": {
     "doctor": "node scripts/doctor.mjs",
     "verify:setup": "node scripts/verify-setup.mjs",

@@ -2,10 +2,10 @@ import postgres from "postgres";
 import type { AuditEntry, Decision, Obligation, Policy } from "@/lib/core/types";
 import { createHash, randomUUID } from "node:crypto";
 let client: ReturnType<typeof postgres> | undefined;
-export function isLive() { return !!(process.env.DATABASE_URL && process.env.ADMIN_PASSWORD && process.env.SESSION_SECRET); }
+export function isLive() { return !!((process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL) && process.env.SESSION_SECRET && process.env.VAULT_ADDRESS); }
 export function db() {
- if (!isLive()) throw new Error("Live mode requires DATABASE_URL, ADMIN_PASSWORD and SESSION_SECRET. See README.");
- if (!client) client = postgres(process.env.DATABASE_URL!, {max: 4, prepare: false, idle_timeout: 20, connect_timeout: 10});
+ if (!isLive()) throw new Error("Live mode requires database, SESSION_SECRET and VAULT_ADDRESS. See README.");
+ if (!client) client = postgres((process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL)!, {max: 4, prepare: false, idle_timeout: 20, connect_timeout: 10});
  return client;
 }
 function dateOnly(value:unknown) { if(value instanceof Date)return value.toISOString().slice(0,10); const raw=String(value); return /^\d{4}-\d{2}-\d{2}/.test(raw) ? raw.slice(0,10) : new Date(raw).toISOString().slice(0,10); }

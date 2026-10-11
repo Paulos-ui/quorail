@@ -26,12 +26,13 @@ function report(status, title, message) {
   if (status === "FAIL") failed++;
 }
 
-if (!process.env.DATABASE_URL) {
-  report("WAIT", "PostgreSQL", "Add DATABASE_URL to .env.local, then run npm run db:init");
+const databaseUrl = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
+if (!databaseUrl) {
+  report("WAIT", "PostgreSQL", "Neon is Vercel-connected. For local DB checks, set DATABASE_URL_UNPOOLED in .env.local.");
 } else {
   let db;
   try {
-    db = postgres(process.env.DATABASE_URL, { max: 1, connect_timeout: 8, idle_timeout: 5, prepare: false });
+    db = postgres(databaseUrl, { max: 1, connect_timeout: 8, idle_timeout: 5, prepare: false });
     const [{ settings, obligations }] = await db`
       SELECT to_regclass('public.treasury_settings')::text AS settings,
              to_regclass('public.obligations')::text AS obligations`;
