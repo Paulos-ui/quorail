@@ -3,6 +3,7 @@ import "./globals.css";
 import "./v2.css";
 import "./v3.css";
 import "./v4.css";
+import "./v42.css";
 
 export const metadata: Metadata = {
  title: "Quorail | Know What a Payment Changes",

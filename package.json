@@ -1,6 +1,6 @@
 {
   "name": "quorail",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "private": true,
   "description": "Quorail \u2014 autonomous USDC treasury decisions on Arc, with a human-centered financial ledger.",
   "scripts": {

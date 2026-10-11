@@ -1,4 +1,4 @@
-# Quorail V3 — Operations & Deployment
+# Quorail V4.2 — Operations & Deployment
 
 Quorail is a single-business Arc Testnet pilot. **Never use an everyday wallet private key or real mainnet funds.** A working deployed app does not establish an audited or secure mainnet treasury.
 
@@ -102,3 +102,6 @@ The agent itself is a server-side EVM signer controlled by a testnet-only key an
 ## 9. Circle integration scope
 
 Arc ERC-20 USDC movement is integrated through the viem payment adapter and a custom Solidity vault. A separate optional Circle App Kit bridge script exists in `scripts/bridge-to-arc.ts`, but **the core signer is not Circle-hosted Wallets**. Do not claim otherwise. See `docs/ARC-OSS-SUBMISSION.md` for reusable pieces and current limitations.
+
+
+For the Tameion pilot, see [SETTLEMENT-PROOF.md](SETTLEMENT-PROOF.md) for the exact onchain and genuine-business evidence to collect.

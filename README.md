@@ -22,7 +22,7 @@ Quorail opens like a working financial ledger, not a marketing page built around
 
 The private control room keeps the same plain financial language. A vault owner connects an injected EVM wallet and signs a free challenge to access real treasury records. Visitors can explore a separate public sandbox, without financial permissions. Live settlement still depends on the existing Arc policy vault, a real agent decision and a confirmed transaction receipt.
 
-**Visual system:** white working surfaces, deep Atlantic blue, ledger rules, compact annotations, tabular amounts, and no gold, gradients, orbit illustrations or oversized italic slogans. See [V4 design notes](docs/V4-DESIGN-SYSTEM.md).
+**Visual system (V4.2):** pure-white working surfaces, a deeply inked Atlantic-blue sidebar and controls, finely ruled data tables, tabular amounts, and a scroll-responsive schematic of capital, obligations, timing and reserve. No gold, ornamental gradients or simulated transaction animations. See [V4.2 design notes](docs/V42-DESIGN-SYSTEM.md).
 
 ## The problem is not the balance. It is what the balance must cover.
 

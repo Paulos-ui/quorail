@@ -7,6 +7,7 @@ import {motion,useReducedMotion,useScroll,useSpring} from "framer-motion";
 import {ArrowDown,ArrowRight,ArrowUpRight,BookOpen,ExternalLink,Menu,X} from "lucide-react";
 import {Brand} from "./Brand";
 import CapitalSheet from "./CapitalSheet";
+import FinancialCurrent from "./FinancialCurrent";
 
 const steps=[
  {label:"Observe",heading:"The balance is only the beginning.",detail:"Quorail reads what is available, what is already promised, when each payment is due and the amount the business needs to keep."},
@@ -23,13 +24,14 @@ export default function Landing(){
  const [stage,setStage]=useState(0);
  useEffect(()=>progress.on("change",p=>{setStage(Math.min(3,Math.floor(p*4)));}),[progress]);
  useEffect(()=>{if(reduce)return;const lenis=new Lenis({duration:1.05,anchors:true});let frame=0;const tick=(time:number)=>{lenis.raf(time);frame=requestAnimationFrame(tick)};frame=requestAnimationFrame(tick);return()=>{cancelAnimationFrame(frame);lenis.destroy()};},[reduce]);
- return <div className="qv2-site q4-site" id="top">
+ return <div className="qv2-site q4-site q42-site" id="top">
  <header className="q4-header"><Brand/><nav className={menu?"q4-nav open":"q4-nav"} aria-label="Primary navigation"><a href="#scenario" onClick={()=>setMenu(false)}>The model</a><a href="#process" onClick={()=>setMenu(false)}>How it decides</a><a href="#infrastructure" onClick={()=>setMenu(false)}>On Arc</a><Link href="/docs" onClick={()=>setMenu(false)}>Documentation</Link></nav><div className="q4-header-actions"><span className="q4-network">ARC / TESTNET</span><Link href="/console" className="q4-button q4-header-button">Connect wallet <ArrowUpRight size={17}/></Link><button type="button" className="q4-menu" aria-label={menu?"Close navigation":"Open navigation"} aria-expanded={menu} onClick={()=>setMenu(!menu)}>{menu?<X size={22}/>:<Menu size={22}/>}</button></div></header>
  <main>
   <section className="q4-intro" aria-labelledby="q4-intro-heading">
+   <FinancialCurrent/>
    <div className="q4-intro-top"><span>QUORAIL / ISSUE NO. 01</span><span>AN AUTONOMOUS BUSINESS TREASURY ON ARC</span></div>
-   <div className="q4-intro-copy"><div><p className="q4-overline">A BETTER WAY TO MAKE A PAYMENT DECISION</p><h1 id="q4-intro-heading">Before money moves,<br/>know what it changes.</h1></div><div className="q4-intro-aside"><p>A business has one balance and several promises. Quorail weighs them together, protects working capital and settles permitted USDC payments on Arc.</p><div className="q4-intro-actions"><Link href="/console" className="q4-button">Connect your wallet <ArrowUpRight size={19}/></Link><a href="#scenario" className="q4-plain-link">Try a decision <ArrowDown size={16}/></a></div><span>OWNER-SIGNED ACCESS / PUBLIC SANDBOX AVAILABLE</span></div></div>
-   <div className="q4-intro-tail"><span>NOT ANOTHER TRANSACTION LIST.</span><span>AN ACCOUNT OF WHAT HAPPENS NEXT.</span><span>SCROLL ↓</span></div>
+   <div className="q4-intro-copy"><div><p className="q4-overline">REAL CAPITAL. CONSIDERED DECISIONS.</p><h1 id="q4-intro-heading">A clearer picture<br/>before you pay.</h1></div><div className="q4-intro-aside"><p>Money has more than one job. Quorail considers the bills that are due, the reserve you need and the cost of acting now—then records the decision before permitted USDC settles on Arc.</p><div className="q4-intro-actions"><Link href="/console" className="q4-button">Connect your wallet <ArrowUpRight size={19}/></Link><a href="#scenario" className="q4-plain-link">Try a decision <ArrowDown size={16}/></a></div><span>OWNER-SIGNED ACCESS / PUBLIC SANDBOX AVAILABLE</span></div></div>
+   <div className="q4-intro-tail q42-intro-tail"><span><i className="q42-mark"/> CAPITAL → COMMITMENTS → DECISION</span><span>THE FUTURE OF A PAYMENT, MADE LEGIBLE.</span><a href="#scenario">EXPLORE THE LEDGER ↓</a></div>
   </section>
   <CapitalSheet/>
   <section className="q4-context" id="problem"><div className="q4-section-index"><span>THE PROBLEM / 01</span><span>EVERY PAYMENT COMPETES WITH ANOTHER</span></div><div className="q4-context-grid"><h2>Cash is easy to count.<br/>Commitments are harder.</h2><div><p>A contractor needs paying. The next invoice might arrive late. Infrastructure renews on Friday. A balance alone cannot tell an owner whether spending today will make next week harder.</p><p>Quorail turns those moving parts into one decision that can be inspected, challenged and, when permitted, executed.</p><Link href="/docs#how-it-works" className="q4-plain-link">Understand the financial model <ArrowUpRight size={16}/></Link></div></div></section>
