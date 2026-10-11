@@ -4,11 +4,11 @@ The public site is a simulation. The private control room can use a real Arc Tes
 
 ## Preconditions (no transaction yet)
 
-1. Quorail V4.2 deployed and `/api/health` reports `live-configured` (this only means configuration is present).
+1. Quorail V4.3 deployed and `/api/health` reports `live-configured` (this only means configuration is present).
 2. Vercel Neon database initialized with `scripts/schema.sql`, with a direct `DATABASE_URL_UNPOOLED` preferred for PostgreSQL session locks.
 3. Claude `ANTHROPIC_API_KEY` configured in Vercel. The only server-side signer key is the dedicated TESTNET `AGENT_PRIVATE_KEY`; owner's private key stays local.
 4. `VAULT_ADDRESS` and `NEXT_PUBLIC_VAULT_ADDRESS` point to the already-deployed Quorail vault; Arc chain ID is `5042002`.
-5. Owner uses an injected EVM wallet controlling `owner()` of that vault and can sign in at `/console`.
+5. Owner uses an injected EVM wallet controlling `owner()` of that vault and can sign from the landing page and proceed directly to `/console`.
 6. Owner wallet has native testnet gas for allowlist changes. Agent wallet has native testnet gas for payments. Vault holds Arc Testnet ERC-20 USDC (different from the native gas balance).
 7. Reserve floor and near-term obligations are calibrated to the actual testnet treasury balance. Avoid unrealistic forecasts.
 

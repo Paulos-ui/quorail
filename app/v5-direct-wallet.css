@@ -1,0 +1,48 @@
+/* V4.3 — Signature presentation restored from V2. Connect on the same screen. */
+:root{--q-ink:#272332;--q-ink2:#1d1a27;--q-parchment:#f1e9d9;--q-paper:#f7f0e4;--q-saffron:#e8b67d;--q-mist:#a7d2c6;--q-coral:#cc715b;--q-quiet:#a49ba8;--q-rule:#494353}
+.qv2-site button.qv2-header-action,.qv2-site button.qv2-primary{border:0;border-radius:0;cursor:pointer;font-family:inherit;white-space:normal;text-align:left}
+.qv2-site .qv2-hero{isolation:isolate}
+.qv2-hero-right{will-change:transform}
+.qv2-site .qv2-field{max-width:100%}
+.qv2-site .qv2-field .qv2-field-top span:last-child{white-space:nowrap}
+.qv2-site .qv2-hero-left>p{max-width:440px}
+.qv2-site .qv2-header-action{flex-shrink:0}
+.q-direct-backdrop{position:fixed;inset:0;z-index:990;background:rgba(15,13,20,.78);display:flex;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(5px)}
+.q-direct-dialog{color:#f4eadf;background:#2d2737;border:1px solid #756679;box-shadow:18px 22px 0 rgba(0,0,0,.25);width:min(100%,510px);max-height:min(92dvh,820px);overflow-y:auto;text-align:left}
+.q-direct-top,.q-direct-bottom{display:flex;align-items:center;justify-content:space-between;padding:15px 24px;border-bottom:1px solid #615468;font:9px var(--mono,monospace);letter-spacing:.1em;color:#d5b589}
+.q-direct-top button{border:0;background:transparent;color:#f7e8d8;cursor:pointer;display:flex;padding:4px}
+.q-direct-body{padding:34px 29px 30px}
+.q-direct-kicker{display:flex;align-items:center;gap:9px;color:#a4c6ba;font:10px var(--mono,monospace);letter-spacing:.07em}
+.q-direct-body h2{font-size:clamp(30px,5vw,48px);letter-spacing:-.065em;line-height:1.1;color:#f9eddb;margin:24px 0 12px}
+.q-direct-body>p{line-height:1.7;color:#c8bdc9;font-size:13px;max-width:400px}
+.q-direct-wallet-list{display:grid;gap:8px;margin-top:27px}
+.q-direct-wallet-list>button{display:flex;align-items:center;gap:14px;padding:16px 18px;background:#3f364a;border:1px solid #706175;color:#f7e9d9;cursor:pointer;text-align:left}
+.q-direct-wallet-list>button:hover:not(:disabled),.q-direct-wallet-list>button:focus-visible{border-color:#e8b67d;background:#4e4153}
+.q-direct-wallet-list>button strong{font-size:13px;flex:1}
+.q-direct-wallet-list>button span{color:#e8b67d;font-size:11px}
+.q-direct-wallet-list button:disabled{opacity:.65;cursor:wait}
+.q-direct-empty{display:flex;align-items:center;gap:11px;font-size:12px;padding:16px;border:1px solid #665c68;color:#e5d7d8;line-height:1.6}
+.q-direct-error{display:flex;gap:9px;align-items:flex-start;color:#ffb7a7;font-size:12px;line-height:1.6;margin-top:18px}
+.q-direct-alternative{font-size:11px;line-height:1.8;color:#baabb7;margin-top:22px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.q-direct-alternative a{color:#e7ba81;text-decoration:underline;text-underline-offset:4px}
+.q-direct-bottom{border-bottom:0;border-top:1px solid #615468;color:#c6b5c2;line-height:1.6}
+.q-console-connect{display:inline-flex;align-items:center;gap:8px;border:1px solid #d5c6a9;padding:9px 12px;background:#2d293d;color:#fff4dd;font-size:11px;cursor:pointer}
+.q-console-connect:hover{background:#4d394e}
+.q-direct-dialog :focus-visible{outline:2px solid #e8b67d;outline-offset:3px}
+@media(max-width:900px){.qv2-hero-right{will-change:auto}.qv2-site .qv2-header-action{gap:9px}}
+@media(max-width:600px){.qv2-site .qv2-hero-left{min-height:535px}.qv2-site .qv2-hero-right{min-height:440px}.q-direct-body{padding:24px 19px}.q-direct-top,.q-direct-bottom{padding:14px 19px}.q-console-connect{font-size:10px;padding:8px}}
+@media(prefers-reduced-motion:reduce){.q-direct-backdrop{backdrop-filter:none}.qv2-hero-right{will-change:auto}}
+
+/* Settlement record for independent Tameion / Arc proof. */
+.q-proof-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:#d4dae0;border:1px solid #d4dae0;margin:28px 0}
+.q-proof-metrics>div{display:flex;flex-direction:column;gap:16px;background:#fff;padding:25px}
+.q-proof-metrics span,.q-proof-recipient,.q-proof-amount small{font:10px var(--mono,monospace);color:#687680;letter-spacing:.04em}
+.q-proof-metrics strong{font-size:clamp(23px,2.6vw,35px);color:#173752}
+.q-proof-note{display:flex;gap:16px;padding:22px;background:#edf1eb;border-left:3px solid #558676;margin-bottom:22px}
+.q-proof-note>svg{flex-shrink:0;color:#3b655b}.q-proof-note strong{font-size:14px;color:#263b40}.q-proof-note p{font-size:12px;line-height:1.7;color:#57706c;max-width:730px;margin-top:6px}
+.q-proof-receipts{display:grid;gap:12px}
+.q-proof-receipt{display:grid;grid-template-columns:1fr auto;gap:20px;padding:26px;background:#fff;border:1px solid #d7dee3}
+.q-proof-receipt h3{font-size:21px;color:#18344a;margin:12px 0}.q-proof-receipt p{font-size:12px;line-height:1.7;max-width:680px;color:#516470}
+.q-proof-recipient{margin-top:17px}.q-proof-recipient code{display:block;color:#234862;word-break:break-all;margin-top:7px}
+.q-proof-amount{display:flex;flex-direction:column;align-items:flex-end;gap:15px}.q-proof-amount strong{font-size:25px;color:#18344a}.q-proof-amount a{display:flex;gap:7px;align-items:center;background:#193d59;color:#fff;padding:10px 13px;font-size:11px}
+@media(max-width:780px){.q-proof-metrics{grid-template-columns:1fr}.q-proof-receipt{grid-template-columns:1fr}.q-proof-amount{align-items:flex-start}}

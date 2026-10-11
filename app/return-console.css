@@ -1,0 +1,46 @@
+/* Retained V4.2 ledger workspace contrasts: only operational console styles. */
+/* Dashboard — visible navy sidebar; clean white working area. */
+.console-layout{background:#fff!important;color:var(--q42-deep)}
+.console-sidebar{background:#071e36!important;color:#eef5fb!important;border-right:1px solid #254762!important;box-shadow:none!important}
+.console-sidebar .brand,.console-sidebar .brand svg,.console-sidebar .brand-period{color:#fff!important}
+.console-sidebar .sidebar-caption,.console-sidebar .sidebar-group-label,.console-sidebar .sidebar-network small{color:#aabfd0!important}
+.console-sidebar .sidebar-top{border-color:#284660!important}
+.console-sidebar .side-workspace,.console-sidebar .sidebar-network{background:#102e4c!important;color:#eef7ff!important;border:1px solid #3c5a72!important}
+.console-sidebar .side-workspace strong,.console-sidebar .sidebar-footer strong,.console-sidebar .sidebar-network strong{color:#f6fbff!important}
+.console-sidebar .side-workspace span,.console-sidebar .sidebar-footer span,.console-sidebar .sidebar-network span{color:#b7c8d6!important}
+.console-sidebar .workspace-icon,.console-sidebar .avatar-j{background:#fff!important;color:#092a49!important}
+.console-sidebar .console-nav button,.console-sidebar .console-nav a{color:#d1e0ec!important;background:transparent!important;border-radius:0!important;transition:background .2s,color .2s,transform .2s}
+.console-sidebar .console-nav button:hover,.console-sidebar .console-nav a:hover{background:#173a59!important;color:#fff!important}
+.console-sidebar .console-nav button.active{background:#f5f9fc!important;color:#092a48!important;border-left:3px solid #f5f9fc!important;font-weight:700}
+.console-sidebar .console-nav button.active svg{color:#092a48!important}
+.console-sidebar .sidebar-footer{border-color:#34536c!important}
+.console-sidebar .sidebar-footer a,.console-sidebar .sidebar-close{color:#dbe7f0!important}
+.console-sidebar .side-workspace svg,.console-sidebar .sidebar-network svg{color:#d8e6ef!important}
+.console-main{background:#fff!important;min-width:0}
+.console-topbar{background:#fff!important;border-bottom:1px solid #d2e0e9!important;min-height:76px}
+.console-breadcrumb{color:#4c667a!important}
+.console-breadcrumb b{color:#092a48!important}
+.console-body{background:#fff!important;max-width:1580px}
+.console-body .small-heading,.console-body .section-number{color:#385e78}
+.console-body .page-lead h1{color:#092a48!important;font-weight:650!important}
+.console-body .page-lead p{color:#566f82!important}
+.console-body .metric-card{background:#fff!important;border:1px solid #d7e2e9!important;border-top:3px solid #a7bfce!important;transition:border-color .2s,transform .2s}
+.console-body .metric-card:hover{transform:translateY(-2px);border-top-color:#0a3154!important}
+.console-body .metric-primary{border-top:3px solid #092d4c!important}
+.console-body .metric-card strong{color:#092a48!important}
+.console-body .table-card,.console-body .decision-card,.console-body .policy-card{background:#fff!important;border-color:#d3e0e9!important}
+.console-body .liquidity-panel{background:#0a2b4b!important;color:#f6faff!important;border:1px solid #0a2b4b!important}
+.console-body .liquidity-panel h2,.console-body .liquidity-panel h2 em,.console-body .liquidity-panel .liquidity-facts strong{color:#fff!important}
+.console-body .liquidity-panel p,.console-body .liquidity-panel .liquidity-facts span,.console-body .liquidity-panel .small-heading{color:#c5d9e7!important}
+.console-body .liquidity-meter .meter-track{background:#44647d!important}
+.console-body .liquidity-meter .meter-track>div{background:#d2e8f6!important}
+.console-body .policy-highlight{background:#f5f8fb!important;border:1px solid #d1dee7!important;color:#0b3054!important}
+.console-body .policy-highlight h2,.console-body .policy-highlight p{color:#092a49!important}
+.console-body .qv2-vault-intro{background:#0a2b4b!important;color:#fff!important;border-color:#0a2b4b!important;padding:38px}
+.console-body .qv2-vault-intro span,.console-body .qv2-vault-intro small,.console-body .qv2-vault-intro svg{color:#d5e5f0!important}
+.console-body .qv2-vault-intro strong{color:#fff!important}
+.console-body .demo-banner,.console-body .config-banner{border:1px solid #d4e1e9!important;background:#f6f9fb!important;color:#1a3c56!important}
+.console-body .mode-flag.live{background:#e8f1ed!important;color:#286047!important}
+.console-body .mode-flag.demo{background:#edf3f8!important;color:#194668!important}
+.console-body :is(button,.btn):focus-visible{outline:2px solid #174a77;outline-offset:3px}
+

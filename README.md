@@ -18,11 +18,13 @@
 
 ## The experience
 
-Quorail opens like a working financial ledger, not a marketing page built around an artificial intelligence graphic. The first interaction is a genuine counterfactual: pick an obligation, choose whether to pay it or defer it, and see how the projected capital available after commitments and reserve changes. The public example is expressly illustrative and **never sends USDC**.
+Quorail returns to its original cinematic dark financial interface: an aubergine treasury canvas, warm metallic accents, a select-to-explore consequence network and four scroll-driven chapters. The visualization is a **public financial example**, not a live statement of any user's funds.
 
-The private control room keeps the same plain financial language. A vault owner connects an injected EVM wallet and signs a free challenge to access real treasury records. Visitors can explore a separate public sandbox, without financial permissions. Live settlement still depends on the existing Arc policy vault, a real agent decision and a confirmed transaction receipt.
+**Wallet-first:** Click **Connect your treasury** directly on the landing page. Choose your browser wallet and sign a free authentication message. If the wallet owns the existing Arc Testnet vault, Quorail opens `/console` immediately. There is **no intermediate wallet login page**. The app never asks for a private key and the signature does not authorize a payment. Any visitor can open `/console` to explore a **clearly labeled example workspace**, without seeing the owner's financial records or acquiring treasury authority.
 
-**Visual system (V4.2):** pure-white working surfaces, a deeply inked Atlantic-blue sidebar and controls, finely ruled data tables, tabular amounts, and a scroll-responsive schematic of capital, obligations, timing and reserve. No gold, ornamental gradients or simulated transaction animations. See [V4.2 design notes](docs/V42-DESIGN-SYSTEM.md).
+**Tameion settlement evidence:** Once the authenticated owner runs a real Claude decision and Quorail confirms an Arc USDC payment, the **Settlement proof** tab lists the decision, recorded USDC amount, receiving wallet and Arcscan transaction link. The owner must independently inspect each receipt. The demo does not generate proof or claim artificial traction. The existing Circle App Kit bridging adapter remains optional; no Tameion API key or connection is required for the hackathon itself.
+
+**Visual system (V4.3):** restored V2 dark cinematic landing, original moving commitment nodes and scroll-controlled decision chapter, with V4.2's deep-blue operational navigation retained. The finance/security engine and smart contract are unchanged. See [V4.3 restoration notes](docs/V43-DESIGN-RESTORE.md).
 
 ## The problem is not the balance. It is what the balance must cover.
 
@@ -54,7 +56,7 @@ The product is designed around a simple principle:
 | **Bounded Authority** | A Solidity vault enforces a recipient allowlist, per-payment limit, daily limit, emergency pause and payment-specific owner approvals. |
 | **Decision Ledger** | Associates each agent decision with its rationale, alternatives, financial snapshot and execution status. |
 | **Arc USDC Settlement** | Broadcasts permitted transfers on Arc Testnet; a successful onchain payment receives an actual transaction hash. |
-| **Interactive Capital Ledger** | Select obligations and compare paying now with waiting. The interface recalculates projected free capital without sending a transaction. |
+| **Interactive Consequence Field** | Explore sample obligations as an animated network and inspect the projected buffer. No blockchain transaction is sent by the public visualization. |
 
 ### The three decisions
 
