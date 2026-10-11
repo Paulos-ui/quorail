@@ -1,0 +1,3 @@
+import Link from "next/link";
+export function Mark({size=36}:{size?:number}){return <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect width="48" height="48" rx="14" fill="currentColor"/><path d="M13 30.5V16.5h11.8c6 0 9.7 3 9.7 8.1 0 5-3.8 8-9.7 8H19.5" stroke="var(--paper)" strokeWidth="3" strokeLinecap="round"/><path d="M23 24.8l11 12" stroke="var(--copper-light)" strokeWidth="3.1" strokeLinecap="round"/><circle cx="15.5" cy="16.5" r="2" fill="var(--copper-light)"/></svg>}
+export function Brand({href="/",compact=false}:{href?:string,compact?:boolean}){return <Link href={href} className="brand" aria-label="Quorail home"><Mark size={compact?32:37}/><span>quorail<span className="brand-period">.</span></span></Link>}

@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import {toCents,evaluateConsequences,forecast} from "../lib/core/finance";
+import type {Obligation,Policy} from "../lib/core/types";
+const allowed="0x4B2dc46C661F609BeAb83d33F01aB9B695431A19";
+const candidate:Obligation={id:"one",title:"Contractor",counterparty:"Builder",recipient:allowed,amountCents:60000,dueDate:"2026-10-12",status:"pending",createdAt:"2026-10-11",category:"Engineering",priority:"high"};
+const p:Policy={reserveCents:10000,horizonDays:14,autonomousLimitCents:50000,singleLimitCents:200000,dailyLimitCents:400000,allowedRecipients:[allowed]};
+test("parses money exactly and rejects bad decimals",()=>{assert.equal(toCents("12.30"),1230);assert.equal(toCents("0.01"),1);assert.throws(()=>toCents("12.345"));assert.throws(()=>toCents("-10"));});
+test("protects reserve and pending commitments",()=>{const r=evaluateConsequences(65000,[candidate],candidate,p,new Date("2026-10-11"));assert.equal(r.recommendation,"hold");assert.equal(r.availableAfterPay,-5000);});
+test("escalates payments over autonomous cap",()=>{const r=evaluateConsequences(200000,[candidate],candidate,p,new Date("2026-10-11"));assert.equal(r.recommendation,"escalate");});
+test("rejects unknown recipient even with ample funds",()=>{const r=evaluateConsequences(200000,[{...candidate,recipient:"0x000000000000000000000000000000000000dead"}],{...candidate,recipient:"0x000000000000000000000000000000000000dead",amountCents:10000},p,new Date("2026-10-11"));assert.equal(r.recommendation,"escalate");});
+test("forecasts committed amount",()=>{const f=forecast(200000,[candidate],p,new Date("2026-10-11"));assert.equal(f.committed,60000);assert.equal(f.availableAfterCommitments,130000);});
