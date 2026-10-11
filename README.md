@@ -2,19 +2,27 @@
 
 # QUORAIL
 
-### Know what money changes.
+### Know what a payment changes.
 
-**An autonomous financial consequence engine for USDC-powered businesses on Arc.**
+**A working treasury for businesses paying in USDC on Arc.**
 
 *See the obligations behind a balance. Understand the cost of a decision. Settle only when the business can afford it.*
 
-[Product walkthrough](#explore-the-product) · [Explore the architecture](#system-architecture) · [Operating guide](docs/DEPLOYMENT.md) · [Arc open-source primitives](docs/ARC-OSS-SUBMISSION.md)
+[The product](#explore-the-product) · [Explore the architecture](#system-architecture) · [Operating guide](docs/DEPLOYMENT.md) · [Arc open-source primitives](docs/ARC-OSS-SUBMISSION.md)
 
 **Designed and built by Jayking** · [GitHub @paulos-ui](https://github.com/paulos-ui) · [X @__official__1](https://x.com/__official__1)
 
 </div>
 
 ---
+
+## The experience
+
+Quorail opens like a working financial ledger, not a marketing page built around an artificial intelligence graphic. The first interaction is a genuine counterfactual: pick an obligation, choose whether to pay it or defer it, and see how the projected capital available after commitments and reserve changes. The public example is expressly illustrative and **never sends USDC**.
+
+The private control room keeps the same plain financial language. A vault owner connects an injected EVM wallet and signs a free challenge to access real treasury records. Visitors can explore a separate public sandbox, without financial permissions. Live settlement still depends on the existing Arc policy vault, a real agent decision and a confirmed transaction receipt.
+
+**Visual system:** white working surfaces, deep Atlantic blue, ledger rules, compact annotations, tabular amounts, and no gold, gradients, orbit illustrations or oversized italic slogans. See [V4 design notes](docs/V4-DESIGN-SYSTEM.md).
 
 ## The problem is not the balance. It is what the balance must cover.
 
@@ -46,7 +54,7 @@ The product is designed around a simple principle:
 | **Bounded Authority** | A Solidity vault enforces a recipient allowlist, per-payment limit, daily limit, emergency pause and payment-specific owner approvals. |
 | **Decision Ledger** | Associates each agent decision with its rationale, alternatives, financial snapshot and execution status. |
 | **Arc USDC Settlement** | Broadcasts permitted transfers on Arc Testnet; a successful onchain payment receives an actual transaction hash. |
-| **Interactive Financial Map** | A selectable, counterfactual capital map with keyboard-accessible nodes shows the relationship between obligations, reserve and projected liquidity. |
+| **Interactive Capital Ledger** | Select obligations and compare paying now with waiting. The interface recalculates projected free capital without sending a transaction. |
 
 ### The three decisions
 
