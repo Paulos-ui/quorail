@@ -2,8 +2,10 @@
   "name": "quorail",
   "version": "1.0.0",
   "private": true,
-  "description": "Quorail \u2014 autonomous financial consequence engine on Arc USDC",
+  "description": "Quorail — autonomous financial consequence engine on Arc USDC",
   "scripts": {
+    "doctor": "node scripts/doctor.mjs",
+    "verify:setup": "node scripts/verify-setup.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -14,7 +16,8 @@
     "vault:status": "tsx scripts/vault-status.ts",
     "test": "tsx --test tests/*.test.ts",
     "vault:configure": "tsx scripts/configure-vault.ts",
-    "circle:bridge": "tsx scripts/bridge-to-arc.ts"
+    "circle:bridge": "tsx scripts/bridge-to-arc.ts",
+    "wallet:new": "tsx scripts/create-test-wallet.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.63.0",

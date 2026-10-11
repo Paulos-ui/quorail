@@ -12,7 +12,11 @@ export const vaultAbi = [
  { type:"function",name:"paused",stateMutability:"view",inputs:[],outputs:[{name:"",type:"bool"}] },
  { type:"function",name:"completedPayments",stateMutability:"view",inputs:[{name:"paymentId",type:"bytes32"}],outputs:[{name:"",type:"bool"}] },
  { type:"function",name:"ownerWithdraw",stateMutability:"nonpayable",inputs:[{name:"recipient",type:"address"},{name:"amount",type:"uint256"}],outputs:[] },
+ { type:"function",name:"setPolicy",stateMutability:"nonpayable",inputs:[{name:"autoCap",type:"uint256"},{name:"maxSingle",type:"uint256"},{name:"maxDaily",type:"uint256"}],outputs:[] },
+ { type:"function",name:"setAgent",stateMutability:"nonpayable",inputs:[{name:"newAgent",type:"address"}],outputs:[] },
  { type:"function",name:"setRecipient",stateMutability:"nonpayable",inputs:[{name:"recipient",type:"address"},{name:"allowed",type:"bool"}],outputs:[] },
+ { type:"function",name:"setPaused",stateMutability:"nonpayable",inputs:[{name:"value",type:"bool"}],outputs:[] },
+ { type:"function",name:"vaultBalance",stateMutability:"view",inputs:[],outputs:[{name:"",type:"uint256"}] },
  { type:"event",name:"PaymentExecuted",inputs:[{name:"paymentId",type:"bytes32",indexed:true},{name:"recipient",type:"address",indexed:true},{name:"amount",type:"uint256",indexed:false}],anonymous:false }
 ] as const;
 export const usdcAbi = [

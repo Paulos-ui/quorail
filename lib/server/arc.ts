@@ -1,5 +1,5 @@
 import { createPublicClient, createWalletClient, http, isAddress } from "viem";
-import { ARC_CHAIN_ID, ARC_USDC, explorer, arc, paymentId, toUnits, fromUnits } from "@/lib/core/chain";
+import { ARC_CHAIN_ID, ARC_USDC, arc, paymentId, toUnits, fromUnits } from "@/lib/core/chain";
 export { ARC_CHAIN_ID, ARC_USDC, explorer, arc, paymentId, toUnits, fromUnits } from "@/lib/core/chain";
 import { privateKeyToAccount } from "viem/accounts";
 import { usdcAbi, vaultAbi } from "@/lib/core/abi";
@@ -11,9 +11,6 @@ export function agentAccount() {
  if(!key || !/^0x[a-fA-F0-9]{64}$/.test(key)) return null;
  return privateKeyToAccount(key as `0x${string}`);
 }
-export function paymentId(id:string) {return keccak256(stringToHex(id));}
-export function toUnits(cents:number) {return BigInt(cents)*10000n;}// cents -> USDC 6 decimals
-export function fromUnits(units:bigint) {return Number(units/10000n);}
 export async function walletInfo() {
  const vault=vaultAddress();
  const agent=agentAccount();

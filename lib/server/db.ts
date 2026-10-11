@@ -46,8 +46,14 @@ export async function createObligation(input: Omit<Obligation,"id"|"status"|"cre
  return id;
 }
 export async function saveDecision(d: Decision) {
+ // Postgres.js JSONValue requires an index signature, while our domain's Option
+ // interface deliberately has none. Bind serialized JSON as query parameters
+ // and cast explicitly to jsonb; this preserves strict domain types, avoids
+ // unsafe `any`/type assertions, and does not interpolate untrusted SQL.
+ const alternativesJson = JSON.stringify(d.alternatives);
+ const snapshotJson = JSON.stringify(d.snapshot);
  await db()`INSERT INTO decisions (id,obligation_id,obligation_title,action,reason,alternatives,confidence,source,snapshot,status)
- VALUES (${d.id},${d.obligationId},${d.obligationTitle},${d.action},${d.reason},${db().json(d.alternatives)},${d.confidence},${d.source},${db().json(d.snapshot)},${d.status})`;
+ VALUES (${d.id},${d.obligationId},${d.obligationTitle},${d.action},${d.reason},${alternativesJson}::jsonb,${d.confidence},${d.source},${snapshotJson}::jsonb,${d.status})`;
  await logEvent("agent.decision",`${d.action.toUpperCase()}: ${d.obligationTitle}`,{decisionId:d.id,source:d.source,reason:d.reason,snapshot:d.snapshot});
 }
 export async function getDecision(id:string) {
