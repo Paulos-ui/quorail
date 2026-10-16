@@ -1,6 +1,6 @@
 {
   "name": "quorail",
-  "version": "4.3.0",
+  "version": "4.4.0",
   "private": true,
   "description": "Quorail \u2014 autonomous USDC treasury decisions on Arc, with a human-centered financial ledger.",
   "scripts": {
@@ -17,7 +17,8 @@
     "test": "tsx --test tests/*.test.ts",
     "vault:configure": "tsx scripts/configure-vault.ts",
     "circle:bridge": "tsx scripts/bridge-to-arc.ts",
-    "wallet:new": "tsx scripts/create-test-wallet.ts"
+    "wallet:new": "tsx scripts/create-test-wallet.ts",
+    "wallet:check-owner": "tsx scripts/check-owner.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.63.0",

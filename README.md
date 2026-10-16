@@ -16,6 +16,10 @@
 
 ---
 
+### OKX Wallet and onchain owner access (V4.4)
+
+Quorail supports OKX, MetaMask and Rabby injected EVM providers through EIP-6963 and wallet-specific injection. From the landing page choose a provider, select the **exact owner account recorded in the Arc vault**, sign a free message, and enter the dashboard directly. An agent account or unrelated wallet cannot access owner controls. The wallet dialog now shows the public vault-owner address to help diagnose mismatches. See [OKX Wallet & Owner Access](docs/OKX-WALLET-AND-OWNER-ACCESS.md). You can run `npm run wallet:check-owner` locally for read-only public-address diagnostics. No new vault deployment, secrets or database changes are required.
+
 ## The experience
 
 Quorail returns to its original cinematic dark financial interface: an aubergine treasury canvas, warm metallic accents, a select-to-explore consequence network and four scroll-driven chapters. The visualization is a **public financial example**, not a live statement of any user's funds.
