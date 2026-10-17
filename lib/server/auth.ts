@@ -1,3 +1,4 @@
+import { configuredOwnerAddress, cleanRpcError } from "@/lib/server/arc";
 /** Wallet-first authentication: signed one-use challenge, vault-owner allowlisting, signed HttpOnly session.
  * The wallet signature is not a transaction and never grants agent key access.
  */
@@ -27,16 +28,17 @@ function unseal<T>(input:string|undefined):T|null{
 }
 export function cookieOptions(maxAge=SESSION_AGE){return {httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"strict" as const,path:"/",maxAge};}
 export function sameOrigin(req:NextRequest){const origin=req.headers.get("origin");if(!origin)return false;try{return [req.headers.get("x-forwarded-host"),req.headers.get("host")].includes(new URL(origin).host);}catch{return false;}}
-export async function ownerAddress(){const address=vaultAddress();if(!address)throw new Error("Quorail vault is not configured");return getAddress(await publicClient().readContract({address,abi:vaultAbi,functionName:"owner"}));}
-export async function issueChallenge(req:NextRequest,address:string){
- if(!isAddress(address))throw new Error("Connect a valid EVM wallet");
- const host=req.headers.get("x-forwarded-host")||req.headers.get("host")||new URL(req.url).host;
- const canonical=getAddress(address);const nonce=randomBytes(20).toString("hex");
- const issued=new Date().toISOString();
- const message=["Quorail — Treasury owner sign-in","","Sign to verify control of the treasury owner wallet.","This signature does not authorize a payment.","",`Domain: ${host}`,`Wallet: ${canonical}`,"Chain: Arc Testnet (5042002)",`Nonce: ${nonce}`,`Issued: ${issued}`].join("\n");
- const challenge:Challenge={address:canonical,message,expires:Date.now()+MAX_CHALLENGE_AGE};
- (await cookies()).set(CHALLENGE_COOKIE,seal(challenge),cookieOptions(300));
- return message;
+export async function ownerAddress() {
+  const vault = vaultAddress();
+  if (!vault) throw new Error("VAULT_ADDRESS is not configured");
+  try {
+    const owner = await publicClient().readContract({ address: vault, abi: vaultAbi, functionName: "owner" });
+    return getAddress(owner);
+  } catch (e) {
+    const fallbackOwner = configuredOwnerAddress();
+    if (fallbackOwner) return fallbackOwner;
+    throw new Error(cleanRpcError(e, "Could not read owner() from Arc Testnet vault"));
+  }
 }
 export async function completeChallenge(address:string,signature:`0x${string}`){
  const store=await cookies();const challenge=unseal<Challenge>(store.get(CHALLENGE_COOKIE)?.value);
