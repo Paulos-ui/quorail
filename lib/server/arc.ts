@@ -1,23 +1,24 @@
 import dns from "dns";
 import { createPublicClient, createWalletClient, fallback, http, isAddress, getAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { ARC_CHAIN_ID, ARC_USDC, DEFAULT_ARC_RPC, arc, paymentId, toUnits, fromUnits } from "@/lib/core/chain";
+import { ARC_CHAIN_ID, ARC_USDC, ARC_RPC_URLS, arc, paymentId, toUnits, fromUnits } from "@/lib/core/chain";
 export { ARC_CHAIN_ID, ARC_USDC, explorer, arc, paymentId, toUnits, fromUnits } from "@/lib/core/chain";
 import { usdcAbi, vaultAbi } from "@/lib/core/abi";
 
 try {
   dns.setDefaultResultOrder("ipv4first");
+  dns.setServers(["1.1.1.1", "8.8.8.8", "1.0.0.1", "8.8.4.4"]);
 } catch {}
 
-function rpcTransport() {
+export function rpcTransport() {
   const customRpc = process.env.ARC_RPC_URL?.trim();
-  const urls = Array.from(new Set([customRpc, DEFAULT_ARC_RPC].filter(Boolean))) as string[];
+  const urls = Array.from(new Set([customRpc, ...ARC_RPC_URLS].filter(Boolean))) as string[];
   return fallback(
     urls.map((url) =>
       http(url, {
-        timeout: 15000,
-        retryCount: 3,
-        retryDelay: 450,
+        timeout: 12000,
+        retryCount: 2,
+        retryDelay: 400,
       })
     )
   );
@@ -61,8 +62,11 @@ export function agentAccount() {
 export function cleanRpcError(err: unknown, fallbackMsg = "Arc Testnet RPC is temporarily unreachable"): string {
   if (!(err instanceof Error)) return fallbackMsg;
   const msg = err.message || fallbackMsg;
+  if (msg.includes("ENOTFOUND")) {
+    return "Local DNS could not resolve Arc RPC hostname. Check your WSL2 internet/DNS connection.";
+  }
   if (msg.includes("fetch failed") || msg.includes("ECONNREFUSED") || msg.includes("ETIMEDOUT")) {
-    return "Arc Testnet RPC timed out while reading contract state. Check your internet/RPC connection or retry.";
+    return "Arc Testnet RPC timed out while reading contract state. Retrying across backup nodes.";
   }
   const short = msg.split("Docs: https://viem.sh")[0].split("Details:")[0].trim();
   return short || fallbackMsg;
