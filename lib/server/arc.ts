@@ -50,7 +50,7 @@ export async function sendVaultPayment(recipient:string,cents:number,id:string) 
  if(!isAddress(recipient)) throw new Error("Invalid EVM recipient");
  const client=publicClient();
  if((await client.getChainId())!==ARC_CHAIN_ID) throw new Error("Wrong Arc network");
- const wallet=createWalletClient({account:signer,chain:arc,transport:http(process.env.ARC_RPC_URL||"https://rpc.testnet.arc.network")});
+ const wallet=createWalletClient({account:signer,chain:arc,transport:http(process.env.ARC_RPC_URL||"https://rpc.testnet.arc.network", { retryCount: 3, retryDelay: 500, timeout: 15000 })});
  const hash=await wallet.writeContract({address:vault,abi:vaultAbi,functionName:"pay",args:[recipient as `0x${string}`,toUnits(cents),paymentId(id)],chain:arc,account:signer});
  return hash;
 }

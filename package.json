@@ -2,11 +2,11 @@
   "name": "quorail",
   "version": "4.4.0",
   "private": true,
-  "description": "Quorail \u2014 autonomous USDC treasury decisions on Arc, with a human-centered financial ledger.",
+  "description": "Quorail — autonomous USDC treasury decisions on Arc, with a human-centered financial ledger.",
   "scripts": {
     "doctor": "node scripts/doctor.mjs",
     "verify:setup": "node scripts/verify-setup.mjs",
-    "dev": "next dev",
+    "dev": "NODE_OPTIONS=\"--dns-result-order=ipv4first\" next dev",
     "build": "next build",
     "start": "next start",
     "lint": "tsc --noEmit",

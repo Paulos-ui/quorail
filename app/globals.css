@@ -18,3 +18,46 @@
 @media(max-width:850px){.site-header{height:75px;padding:0 5%}.site-header .brand>span{font-size:24px}.site-header .btn-sm{display:none}.network-tag,.live-dot{display:none}.mobile-menu{display:flex}.site-nav{display:none;position:absolute;top:75px;right:0;left:0;background:#f2f2e8;padding:25px 6%;flex-direction:column;gap:22px;border-bottom:1px solid #d3d8c8}.site-nav.open{display:flex}.intro-scroll{height:215vh}.intro-sticky{padding-top:75px}.hero-copy{top:18%;left:6%;right:6%}.hero-copy h1{font-size:clamp(50px,11vw,85px)}.hero-visual{top:42%;right:-5%;width:110%;opacity:.85}.hero-index{display:none}.hero-baseline{bottom:20px}.hero-evolved{bottom:17%;left:3%;right:3%}.thesis-section,.principles-section,.documentation-preview{padding:85px 6%}.thesis-grid,.principles-heading,.doc-grid,.mechanics-inner{grid-template-columns:1fr;gap:40px}.thesis-grid{padding:70px 0}.thesis-right{max-width:560px}.consequence-section{padding:95px 6%}.consequence-shell{grid-template-columns:1fr}.consequence-left{margin-bottom:32px}.consequence-left h2{margin-top:28px}.scenario-device{max-width:630px;width:100%;margin:auto;box-shadow:12px 15px 0 #10241f}.principle-grid{grid-template-columns:1fr 1fr}.principle-card:last-child{grid-column:span 2}.card-art{height:220px}.principles-heading{margin-top:65px}.principle-grid{margin-top:60px}.mechanics-section{padding:90px 6%}.documentation-preview .doc-grid{margin-top:60px}.doc-grid>div{max-width:700px}.footer-top{grid-template-columns:1fr 1fr}.footer-links{grid-column:span 2}.console-sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-102%);transition:transform .25s;box-shadow:10px 0 24px #132d2620}.console-sidebar.mobile-open{transform:translateX(0)}.sidebar-close{display:block;position:absolute;top:29px;right:16px}.hamburger{display:block}.console-breadcrumb{margin-right:auto;margin-left:18px}.dashboard-duo{grid-template-columns:1fr}.liquidity-panel{min-height:unset}.treasury-map{min-height:370px}.console-topbar{height:70px}.docs-grid{grid-template-columns:1fr;gap:40px}.docs-aside{position:static;display:flex;flex-direction:row;flex-wrap:wrap}.docs-aside span{width:100%;margin:0 0 7px}.docs-aside a{border-left:0;border-bottom:1px solid #cdd7c7}}
 @media(max-width:560px){.intro-scroll{height:205vh}.intro-shade{background:linear-gradient(180deg,#f3f1e8eb,#f3f1e8aa 35%,transparent 80%)}.hero-copy{top:16%}.hero-copy h1{font-size:clamp(44px,11.5vw,65px);white-space:normal}.hero-copy>p{font-size:14px;max-width:290px;margin-top:22px}.hero-actions{flex-wrap:wrap;gap:12px;margin-top:25px}.hero-actions .btn{min-height:46px;font-size:11px;padding-inline:14px}.hero-actions .text-link{font-size:11px}.hero-visual{top:48%;width:150%;right:-32%}.hero-evolved{bottom:20%}.hero-evolved h2{font-size:clamp(40px,10vw,55px)}.hero-baseline{font-size:7px}.scroll-rail{display:none}.section-header{font-size:8px;gap:10px}.thesis-grid h2,.principles-heading h2,.documentation-preview h2{font-size:clamp(42px,10.5vw,62px)}.thesis-right .lead{font-size:19px}.consequence-left h2{font-size:53px}.scenario-device{box-shadow:8px 9px 0 #10241f}.device-main{padding:22px}.request-value{font-size:53px}.line-chart svg{height:165px}.scenario-result strong{font-size:28px}.scenario-status{font-size:8px}.principle-grid{grid-template-columns:1fr}.principle-card:last-child{grid-column:auto}.principles-section,.documentation-preview{padding-block:75px}.principles-heading h2{font-size:47px}.card-art{height:230px}.mechanics-inner h2{font-size:49px}.pipeline-item{grid-template-columns:24px 1fr 18px}.pipeline-item small{grid-column:2;grid-row:2}.pipeline-item svg{grid-column:3;grid-row:1/3}.doc-actions{flex-wrap:wrap}.pseudo-code{box-shadow:8px 8px 0 #d8dfd4}.code-lines{font-size:9px}.final-cta{padding:100px 5%}.final-cta h2{font-size:50px}.footer-top{grid-template-columns:1fr;gap:27px;padding-bottom:60px}.footer-links{grid-column:auto}.footer-bottom{flex-direction:column;font-size:8px}.console-topbar{padding:0 15px}.console-breadcrumb{font-size:8px;margin-left:8px}.mode-flag{font-size:8px;padding:7px}.top-actions{gap:6px}.console-body{padding:17px 13px 0}.page-lead{align-items:flex-start;flex-direction:column;gap:16px;margin:25px 0}.page-lead h1{font-size:42px}.metric-grid{gap:9px}.metric-card{padding:15px;min-height:145px}.metric-top{font-size:8px}.metric-top svg{width:15px}.metric-card strong{font-size:26px;white-space:normal}.metric-bottom{font-size:9px}.treasury-map-top,.treasury-map-bottom{padding-inline:12px;font-size:8px}.map-svg{height:270px}.treasury-map{min-height:315px}.liquidity-panel{padding:22px}.card-heading{padding:20px}.card-heading h2{font-size:20px}.table-side-note{display:none}.obligation-table th,.obligation-table td{padding:13px}.demo-banner,.config-banner{align-items:flex-start;flex-wrap:wrap;font-size:11px;padding:11px}.demo-banner a,.config-banner a{margin-left:29px}.obligation-summaries{grid-template-columns:1fr 1fr}.obligation-summaries>div{padding:17px}.obligation-summaries>div:last-child{grid-column:span 2;border-top:1px solid #cbd4c5}.obligation-summaries strong{font-size:26px}.policy-grid{grid-template-columns:1fr 1fr;gap:8px}.policy-card{padding:15px;min-height:220px}.policy-card>strong{font-size:27px}.policy-card p{font-size:10px}.policy-highlight{padding:24px}.policy-highlight h2{font-size:38px}.policy-icon{display:none}.vault-info{grid-template-columns:1fr}.decision-head{flex-wrap:wrap}.decision-right{margin-left:0;width:100%}.decision-card{padding:18px}.decision-details{padding:15px;gap:10px}.decision-details span{font-size:8px}.decision-details strong{font-size:10px}.alternatives>div:not(.small-heading){grid-template-columns:1fr 35px}.alternatives small{grid-column:1;grid-row:2}.alternatives b{grid-column:2;grid-row:1}.console-bottom{flex-direction:column;align-items:flex-start;font-size:8px}.login-panel{padding:35px 22px}.form-two{gap:9px}.obligation-modal{padding-inline:19px}.docs-header{padding:0 5%}.docs-header-actions a:not(.btn){display:none}.docs-hero{padding:75px 6%}.docs-hero h1{font-size:56px}.docs-grid{padding:55px 6%}.docs-content h2{font-size:40px}.docs-content pre{font-size:10px;padding:14px}.arch-row{gap:7px}.arch-node{font-size:9px}.docs-meta{gap:14px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+
+/* === QUORAIL V4.5 HUMANIZED EDITORIAL OVERRIDES === */
+:root {
+  --qr-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html, body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Crisp editorial typography & calmer spacing */
+h1, h2, h3, h4 {
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+p {
+  line-height: 1.65;
+}
+
+/* Tactile button & interactive element refinement */
+button, a[role="button"] {
+  transition: transform 0.18s var(--qr-ease-out),
+              background-color 0.18s var(--qr-ease-out),
+              border-color 0.18s var(--qr-ease-out),
+              box-shadow 0.18s var(--qr-ease-out),
+              opacity 0.18s ease !important;
+}
+
+button:active:not(:disabled) {
+  transform: translateY(1px) scale(0.995);
+}
+
+/* Clean up error banner readability in Vault Owner Access modal */
+[class*="error"], [class*="alert"], [role="alert"] {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+  border-radius: 8px;
+}
