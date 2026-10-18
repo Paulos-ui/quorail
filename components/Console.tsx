@@ -26,6 +26,27 @@ function Constellation({state}:{state:TreasuryState}){
  return <ConsequenceField compact entries={items.map(o=>({label:o.title.toUpperCase(),amount:o.amountCents/100,urgency:o.dueDate}))} capital={state.balanceCents/100} reserve={state.policy.reserveCents/100}/>;
 }
 async function callAPI(path:string,body:unknown){const res=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const data=await res.json();if(!res.ok)throw new Error(data.error||"Request failed");return data;}
+
+function normalizeState(raw: Partial<TreasuryState> | null | undefined): TreasuryState {
+  const base = demoState();
+  if (!raw || typeof raw !== "object") return base;
+  return {
+    ...base,
+    ...raw,
+    balanceCents: typeof raw.balanceCents === "number" ? raw.balanceCents : base.balanceCents,
+    policy: {
+      ...base.policy,
+      ...(raw.policy || {}),
+      allowedRecipients: Array.isArray(raw.policy?.allowedRecipients)
+        ? raw.policy.allowedRecipients
+        : base.policy.allowedRecipients,
+    },
+    obligations: Array.isArray(raw.obligations) ? raw.obligations : base.obligations,
+    decisions: Array.isArray(raw.decisions) ? raw.decisions : base.decisions,
+    audit: Array.isArray(raw.audit) ? raw.audit : base.audit,
+  };
+}
+
 export default function Console(){
  const [state,setState]=useState<TreasuryState>(demoState);const [ready,setReady]=useState(false);const [view,setView]=useState<View>("overview");const [menu,setMenu]=useState(false);
  const [visitorMode,setVisitorMode]=useState(false);const [connectedAddr,setConnectedAddr]=useState<string>("");useEffect(()=>{try{setConnectedAddr(localStorage.getItem("quorail-connected-address")||"");}catch{}},[]);const [simSpend,setSimSpend]=useState(250);const [simRevenue,setSimRevenue]=useState(0);const [recipientInput,setRecipientInput]=useState("");const [working,setWorking]=useState(false);const [feedback,setFeedback]=useState("");const [error,setError]=useState("");const [showForm,setShowForm]=useState(false);const [form,setForm]=useState(initialForm);const [expanded,setExpanded]=useState<string|null>(null);
@@ -36,7 +57,7 @@ export default function Console(){
    if(info.mode==="demo"){
     let demo=demoState();try{const raw=localStorage.getItem(createdKey);if(raw){const parsed=JSON.parse(raw) as TreasuryState;if(parsed.mode==="demo")demo={...demo,obligations:parsed.obligations||demo.obligations,decisions:parsed.decisions||[]};}}catch{}
     setState(demo);
-   }else if(info.authenticated){setState(info as TreasuryState);}else{setState(demoState());}
+   }else if(info.authenticated){setState(normalizeState(info as Partial<TreasuryState>));}else{setState(demoState());}
   }catch(e){setError(e instanceof Error?e.message:"Network error");}
   finally{setReady(true);}
  },[visitorMode]);
