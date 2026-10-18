@@ -8,14 +8,13 @@ import {
   ArrowRight,
   ArrowUpRight,
   BookOpen,
-  Check,
   CheckCircle2,
   ChevronDown,
   CircleAlert,
   Clock3,
   Compass,
   Copy,
-  Download,
+  Droplets,
   ExternalLink,
   GitBranch,
   LayoutGrid,
@@ -51,7 +50,7 @@ import {
   toCents,
   usd,
 } from "@/lib/core/finance";
-import type { AuditEntry, Decision, Obligation, TreasuryState } from "@/lib/core/types";
+import type { Decision, Obligation, TreasuryState } from "@/lib/core/types";
 import {
   ARC_USDC,
   DEFAULT_VAULT_ADDRESS,
@@ -70,14 +69,13 @@ import {
   http,
   isAddress,
   parseAbi,
-  parseAbiItem,
 } from "viem";
 
 type View =
   | "overview"
-  | "vault"
   | "obligations"
   | "decisions"
+  | "vault"
   | "proof"
   | "simulation"
   | "policy"
@@ -87,10 +85,6 @@ const erc20TransferAbi = parseAbi([
   "function transfer(address to, uint256 value) external returns (bool)",
   "function balanceOf(address account) external view returns (uint256)",
 ]);
-
-const transferEventAbi = parseAbiItem(
-  "event Transfer(address indexed from, address indexed to, uint256 value)"
-);
 
 const SEEDED_DEMO_TITLES = new Set([
   "product engineering",
@@ -106,8 +100,8 @@ const initialForm = {
   counterparty: "",
   recipient: "",
   amount: "",
-  dueDate: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10),
-  category: "Infrastructure",
+  dueDate: new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10),
+  category: "Contractors",
   priority: "high" as Obligation["priority"],
 };
 
@@ -123,11 +117,6 @@ function friendlyDay(day: string) {
   });
 }
 
-function shortAddr(addr: string | null | undefined) {
-  if (!addr || addr.length < 12) return addr || "—";
-  return `${addr.slice(0, 8)}…${addr.slice(-6)}`;
-}
-
 function StatusPill({ status }: { status: string }) {
   return <span className={`status-pill status-${status}`}>{status.replace("_", " ")}</span>;
 }
@@ -136,7 +125,7 @@ function Skeleton() {
   return (
     <div className="loading-dashboard">
       <div className="loader-ring" />
-      <p>Connecting to Arc Testnet Vault & indexing on-chain USDC state…</p>
+      <p>Syncing Arc Testnet vault…</p>
     </div>
   );
 }
@@ -155,18 +144,6 @@ function Constellation({ state }: { state: TreasuryState }) {
       reserve={state.policy.reserveCents / 100}
     />
   );
-}
-
-function makeAudit(kind: string, message: string, payload: Record<string, unknown> = {}): AuditEntry {
-  return {
-    id: crypto.randomUUID(),
-    kind,
-    message,
-    at: new Date().toISOString(),
-    payload,
-    prevHash: "0x0",
-    hash: "0x" + crypto.randomUUID().replace(/-/g, ""),
-  };
 }
 
 function normalizeLiveState(raw: Partial<TreasuryState> | null | undefined): TreasuryState {
@@ -193,7 +170,7 @@ function normalizeLiveState(raw: Partial<TreasuryState> | null | undefined): Tre
   const defaultPolicy = {
     ...base.policy,
     reserveCents: effectiveReserve,
-    autonomousLimitCents: 1200,
+    autonomousLimitCents: 1500,
     singleLimitCents: 5000,
     dailyLimitCents: 10000,
   };
@@ -268,12 +245,8 @@ export default function Console() {
   const [menu, setMenu] = useState(false);
   const [connectedAddr, setConnectedAddr] = useState<string>("");
   const [walletUsdcCents, setWalletUsdcCents] = useState<number | null>(null);
-  const [copiedText, setCopiedText] = useState<string>("");
-  const [onchainTransfers, setOnchainTransfers] = useState<
-    Array<{ txHash: string; direction: "IN" | "OUT"; counterparty: string; amountCents: number; blockNumber: string }>
-  >([]);
 
-  const [simSpend, setSimSpend] = useState(4);
+  const [simSpend, setSimSpend] = useState(5);
   const [simRevenue, setSimRevenue] = useState(0);
   const [recipientInput, setRecipientInput] = useState("");
   const [working, setWorking] = useState(false);
@@ -284,103 +257,30 @@ export default function Console() {
   const [form, setForm] = useState(initialForm);
   const [showDeposit, setShowDeposit] = useState(false);
   const [depositAmount, setDepositAmount] = useState("5.00");
+  const [showFaucet, setShowFaucet] = useState(false);
+  const [faucetAddress, setFaucetAddress] = useState("");
   const [showReserveModal, setShowReserveModal] = useState(false);
   const [reserveInput, setReserveInput] = useState("5.00");
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  const copyToClipboard = (value: string, label: string) => {
-    try {
-      navigator.clipboard.writeText(value);
-      setCopiedText(label);
-      setTimeout(() => setCopiedText(""), 2000);
-    } catch {}
-  };
-
-  // Index real on-chain USDC balance + ERC-20 Transfer logs from Arc Testnet
   const syncOnchainBalances = useCallback(
     async (vaultAddr: string, userAddr?: string) => {
       try {
         const client = getArcClient();
         if (isAddress(vaultAddr)) {
-          const checksumVault = getAddress(vaultAddr);
           const vBal = await client.readContract({
             address: ARC_USDC,
             abi: usdcAbi,
             functionName: "balanceOf",
-            args: [checksumVault],
+            args: [getAddress(vaultAddr)],
           });
           const onchainVaultCents = fromUnits(vBal);
-
-          setState((prev) => {
-            const hasFundingAudit = (prev.audit || []).some((a) => a.kind === "vault.onchain_verified");
-            const verifiedAudit = hasFundingAudit
-              ? prev.audit || []
-              : [
-                  makeAudit(
-                    "vault.onchain_verified",
-                    `Verified ${usd(onchainVaultCents)} USDC live balance in QuorailVault.sol (${shortAddr(checksumVault)}) on Arc Testnet (Chain ID 5042002).`,
-                    { vault: checksumVault, balanceCents: onchainVaultCents }
-                  ),
-                  ...(prev.audit || []),
-                ];
-            return {
-              ...prev,
-              mode: "live",
-              balanceCents: onchainVaultCents,
-              audit: verifiedAudit,
-            };
-          });
-
-          // Query recent on-chain Transfer events to/from the Vault on Arc Testnet
-          try {
-            const latestBlock = await client.getBlockNumber();
-            const fromBlock = latestBlock > 50000n ? latestBlock - 50000n : 0n;
-            const [inLogs, outLogs] = await Promise.all([
-              client
-                .getLogs({
-                  address: ARC_USDC,
-                  event: transferEventAbi,
-                  args: { to: checksumVault },
-                  fromBlock,
-                  toBlock: latestBlock,
-                })
-                .catch(() => []),
-              client
-                .getLogs({
-                  address: ARC_USDC,
-                  event: transferEventAbi,
-                  args: { from: checksumVault },
-                  fromBlock,
-                  toBlock: latestBlock,
-                })
-                .catch(() => []),
-            ]);
-
-            const parsedTransfers = [
-              ...inLogs.map((l) => ({
-                txHash: l.transactionHash || "",
-                direction: "IN" as const,
-                counterparty: String(l.args?.from || ""),
-                amountCents: fromUnits(BigInt(l.args?.value || 0n)),
-                blockNumber: String(l.blockNumber || 0n),
-              })),
-              ...outLogs.map((l) => ({
-                txHash: l.transactionHash || "",
-                direction: "OUT" as const,
-                counterparty: String(l.args?.to || ""),
-                amountCents: fromUnits(BigInt(l.args?.value || 0n)),
-                blockNumber: String(l.blockNumber || 0n),
-              })),
-            ]
-              .filter((t) => t.txHash)
-              .reverse();
-
-            if (parsedTransfers.length > 0) {
-              setOnchainTransfers(parsedTransfers);
-            }
-          } catch {}
+          setState((prev) => ({
+            ...prev,
+            mode: "live",
+            balanceCents: onchainVaultCents,
+          }));
         }
-
         const activeUser = userAddr || connectedAddr;
         if (activeUser && isAddress(activeUser)) {
           const uBal = await client.readContract({
@@ -400,7 +300,10 @@ export default function Console() {
     let savedAddr = "";
     try {
       savedAddr = localStorage.getItem("quorail-connected-address") || "";
-      if (savedAddr) setConnectedAddr(savedAddr);
+      if (savedAddr) {
+        setConnectedAddr(savedAddr);
+        setFaucetAddress(savedAddr);
+      }
     } catch {}
 
     try {
@@ -481,6 +384,7 @@ export default function Console() {
     try {
       const addr = localStorage.getItem("quorail-connected-address") || "";
       setConnectedAddr(addr);
+      if (addr) setFaucetAddress(addr);
     } catch {}
     await refresh();
   };
@@ -498,6 +402,42 @@ export default function Console() {
     });
   };
 
+  // CLAIM ARC TESTNET USDC FAUCET
+  const handleClaimFaucet = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await runAction(async () => {
+      const targetAddr = (faucetAddress || connectedAddr || state.vaultAddress || DEFAULT_VAULT_ADDRESS).trim();
+      const res = await callAPI("/api/faucet", {
+        address: targetAddr,
+        target: targetAddr.toLowerCase() === (state.vaultAddress || DEFAULT_VAULT_ADDRESS).toLowerCase() ? "vault" : "wallet",
+      });
+
+      const auditEntry = {
+        id: crypto.randomUUID(),
+        payload: {},
+        prevHash: "0x0",
+        hash: res.hash || "0x" + crypto.randomUUID().replace(/-/g, ""),
+        kind: "faucet.claim",
+        message: res.message || `Claimed Arc Testnet USDC for ${targetAddr.slice(0, 8)}…`,
+        at: new Date().toISOString(),
+      };
+
+      persistLiveState({
+        ...state,
+        balanceCents: res.onchain ? state.balanceCents : state.balanceCents + (res.amountCents || 500),
+        audit: [auditEntry, ...(state.audit || [])],
+      });
+
+      await syncOnchainBalances(state.vaultAddress || DEFAULT_VAULT_ADDRESS, connectedAddr);
+      setShowFaucet(false);
+      setFeedback(
+        res.hash
+          ? `Drip confirmed on Arc Testnet! Tx: ${res.hash}`
+          : res.message
+      );
+    });
+  };
+
   const handleUpdateReserve = (e: React.FormEvent) => {
     e.preventDefault();
     const cents = toCents(reserveInput);
@@ -508,18 +448,12 @@ export default function Console() {
     try {
       localStorage.setItem(CUSTOM_RESERVE_KEY, String(cents));
     } catch {}
-    const auditEntry = makeAudit(
-      "policy.reserve_updated",
-      `Updated Protected Reserve floor to ${usd(cents)} USDC.`,
-      { reserveCents: cents }
-    );
-    persistLiveState({
-      ...state,
-      policy: { ...state.policy, reserveCents: cents },
-      audit: [auditEntry, ...(state.audit || [])],
-    });
+    setState((prev) => ({
+      ...prev,
+      policy: { ...prev.policy, reserveCents: cents },
+    }));
     setShowReserveModal(false);
-    setFeedback(`Protected Reserve floor updated to ${usd(cents)} USDC.`);
+    setFeedback(`Protected Reserve updated to ${usd(cents)} USDC.`);
   };
 
   const handleDeleteObligation = (id: string) => {
@@ -529,53 +463,12 @@ export default function Console() {
       delSet.add(id);
       localStorage.setItem(DELETED_IDS_KEY, JSON.stringify(Array.from(delSet)));
     } catch {}
-    const nextObligations = state.obligations.filter((o) => o.id !== id);
-    const nextDecisions = state.decisions.filter((d) => d.obligationId !== id);
     persistLiveState({
       ...state,
-      obligations: nextObligations,
-      decisions: nextDecisions,
+      obligations: state.obligations.filter((o) => o.id !== id),
+      decisions: state.decisions.filter((d) => d.obligationId !== id),
     });
-    setFeedback("Commitment removed from active register.");
-  };
-
-  // 1-CLICK SCENARIO PRESET BUILDER (Allows instant testing of PAY, HOLD, and ESCALATE against the $20 Vault)
-  const addQuickObligation = (preset: {
-    title: string;
-    counterparty: string;
-    amountCents: number;
-    daysOut: number;
-    category: string;
-    priority: Obligation["priority"];
-  }) => {
-    const targetRecipient =
-      connectedAddr && isAddress(connectedAddr)
-        ? getAddress(connectedAddr)
-        : "0xA6A3BD61b4623f61917ABCD13b4c6fde3438Ea77";
-    const dueDate = new Date(Date.now() + preset.daysOut * 86400000).toISOString().slice(0, 10);
-    const newItem: Obligation = {
-      id: "live-" + crypto.randomUUID(),
-      title: preset.title,
-      counterparty: preset.counterparty,
-      recipient: targetRecipient,
-      amountCents: preset.amountCents,
-      dueDate,
-      category: preset.category,
-      priority: preset.priority,
-      status: "pending",
-      createdAt: new Date().toISOString(),
-    };
-    const auditEntry = makeAudit(
-      "obligation.created",
-      `Registered commitment "${newItem.title}" (${usd(newItem.amountCents)} USDC) due ${dueDate} to ${shortAddr(newItem.recipient)}.`
-    );
-    const nextState = {
-      ...state,
-      obligations: [...state.obligations, newItem].sort((a, b) => a.dueDate.localeCompare(b.dueDate)),
-      audit: [auditEntry, ...(state.audit || [])],
-    };
-    persistLiveState(nextState);
-    setFeedback(`Added "${newItem.title}" (${usd(newItem.amountCents)} USDC). Click "Run Agent Cycle" to evaluate it!`);
+    setFeedback("Obligation removed.");
   };
 
   // REAL ON-CHAIN DEPOSIT USDC TO VAULT
@@ -588,7 +481,7 @@ export default function Console() {
       if (!isAddress(vaultAddr)) throw new Error("Vault contract address is not configured.");
 
       const provider = await getActiveWalletProvider();
-      if (!provider) throw new Error("Connect your EVM wallet (OKX or MetaMask) first to deposit USDC.");
+      if (!provider) throw new Error("Connect your EVM wallet first to deposit USDC.");
 
       const accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
       const sender = accounts?.[0];
@@ -614,15 +507,19 @@ export default function Console() {
         chain: arc,
       });
 
-      setFeedback(`Broadcasting ${usd(cents)} USDC deposit to Arc Testnet (${hash.slice(0, 10)}…)`);
+      setFeedback(`Broadcasting ${usd(cents)} USDC deposit (${hash.slice(0, 10)}…)`);
       const receipt = await getArcClient().waitForTransactionReceipt({ hash, timeout: 90000 });
       if (receipt.status !== "success") throw new Error("Deposit transaction reverted on Arc Testnet.");
 
-      const auditEntry = makeAudit(
-        "vault.deposit",
-        `Deposited ${usd(cents)} USDC into Quorail Vault from ${shortAddr(checksumSender)} (Tx: ${hash})`,
-        { txHash: hash, amountCents: cents }
-      );
+      const auditEntry = {
+        id: crypto.randomUUID(),
+        payload: {},
+        prevHash: "0x0",
+        hash: "0x" + crypto.randomUUID().replace(/-/g, ""),
+        kind: "vault.deposit",
+        message: `Deposited ${usd(cents)} USDC into Vault from ${checksumSender.slice(0, 8)}… (Tx: ${hash})`,
+        at: new Date().toISOString(),
+      };
 
       persistLiveState({
         ...state,
@@ -632,7 +529,7 @@ export default function Console() {
 
       await syncOnchainBalances(vaultAddr, checksumSender);
       setShowDeposit(false);
-      setFeedback(`Confirmed! Deposited ${usd(cents)} USDC into Vault on Arc Testnet. Tx: ${hash}`);
+      setFeedback(`Deposited ${usd(cents)} USDC into Vault! Tx: ${hash}`);
     });
   };
 
@@ -642,7 +539,7 @@ export default function Console() {
     await runAction(async () => {
       const cents = toCents(form.amount);
       if (cents <= 0) throw new Error("Payment amount must be positive");
-      if (!isAddress(form.recipient)) throw new Error("Enter a valid Arc/EVM wallet address (0x...)");
+      if (!isAddress(form.recipient)) throw new Error("Enter a valid 0x recipient address");
       if (!form.dueDate) throw new Error("Choose a due date");
 
       const newItem: Obligation = {
@@ -670,10 +567,15 @@ export default function Console() {
         });
       } catch {}
 
-      const auditEntry = makeAudit(
-        "obligation.created",
-        `Registered commitment "${newItem.title}" for ${usd(cents)} USDC to ${shortAddr(newItem.recipient)}`
-      );
+      const auditEntry = {
+        id: crypto.randomUUID(),
+        payload: {},
+        prevHash: "0x0",
+        hash: "0x" + crypto.randomUUID().replace(/-/g, ""),
+        kind: "obligation.created",
+        message: `Added "${newItem.title}" (${usd(cents)} USDC) to ${newItem.recipient.slice(0, 8)}…`,
+        at: new Date().toISOString(),
+      };
       persistLiveState({
         ...state,
         obligations: [...state.obligations, newItem].sort((a, b) => a.dueDate.localeCompare(b.dueDate)),
@@ -682,87 +584,34 @@ export default function Console() {
 
       setForm(initialForm);
       setShowForm(false);
-      setFeedback(`Commitment "${newItem.title}" (${usd(cents)} USDC) added to live register.`);
+      setFeedback(`Added "${newItem.title}" (${usd(cents)} USDC). Click Run Agent Cycle to evaluate.`);
     });
   };
 
-  // ZERO-DEAD-END AGENT CYCLE (Evaluates existing pending obligations, or auto-initializes a realistic 3-part live test batch if 0 exist)
+  // RUN AGENT CYCLE
   const runAgent = async () =>
     runAction(async () => {
-      let currentObligations = [...state.obligations];
-      let pendingTargets = currentObligations.filter(
+      const pendingTargets = state.obligations.filter(
         (o) => o.status === "pending" && !state.decisions.some((d) => d.obligationId === o.id)
       );
-
-      // If user clicks "Run Agent Cycle" when 0 obligations exist, auto-stage 3 realistic Arc commitments ($2 PAY, $6 HOLD, $14 ESCALATE) so it NEVER fails!
       if (!pendingTargets.length) {
-        const defaultRecipient =
-          connectedAddr && isAddress(connectedAddr)
-            ? getAddress(connectedAddr)
-            : "0xA6A3BD61b4623f61917ABCD13b4c6fde3438Ea77";
-        const autoBatch: Obligation[] = [
-          {
-            id: "live-" + crypto.randomUUID(),
-            title: "Arc RPC Node & Indexer Telemetry",
-            counterparty: "Helios Infra",
-            recipient: defaultRecipient,
-            amountCents: 200, // $2.00 USDC -> PAY (Safe within $15 buffer & $12 autonomous cap)
-            dueDate: new Date(Date.now() + 1 * 86400000).toISOString().slice(0, 10),
-            category: "Infrastructure",
-            priority: "critical",
-            status: "pending",
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: "live-" + crypto.randomUUID(),
-            title: "Smart Contract Formal Verification Milestone",
-            counterparty: "Spearbit Labs",
-            recipient: defaultRecipient,
-            amountCents: 1350, // $13.50 USDC -> ESCALATE (Exceeds $12 autonomous limit; requires owner sign-off)
-            dueDate: new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10),
-            category: "Contractors",
-            priority: "high",
-            status: "pending",
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: "live-" + crypto.randomUUID(),
-            title: "Annual Cloud Archive Prepayment",
-            counterparty: "Nimbus Storage",
-            recipient: defaultRecipient,
-            amountCents: 900, // $9.00 USDC -> HOLD (Combined commitments breach $5.00 protected reserve)
-            dueDate: new Date(Date.now() + 9 * 86400000).toISOString().slice(0, 10),
-            category: "Operations",
-            priority: "normal",
-            status: "pending",
-            createdAt: new Date().toISOString(),
-          },
-        ];
-        currentObligations = [...currentObligations, ...autoBatch];
-        pendingTargets = autoBatch;
+        setShowForm(true);
+        throw new Error("Add an obligation first so the Agent has a payment to evaluate.");
       }
 
       const created: Decision[] = pendingTargets.map((o) => {
-        const r = evaluateConsequences(state.balanceCents, currentObligations, o, state.policy);
+        const r = evaluateConsequences(state.balanceCents, state.obligations, o, state.policy);
         return {
           id: crypto.randomUUID(),
           obligationId: o.id,
           obligationTitle: o.title,
           action: r.recommendation,
-          reason: `Consequence Engine Assessment (${r.recommendation.toUpperCase()}): Due in ${r.days}d (${o.priority} priority). Live Arc Vault holds ${usd(
-            state.balanceCents
-          )} USDC against ${usd(
+          reason: `Due in ${r.days}d. Vault: ${usd(state.balanceCents)} | Competing: ${usd(
             r.competing
-          )} in competing 14-day obligations and a ${usd(
-            state.policy.reserveCents
-          )} protected reserve floor. Post-payout discretionary buffer: ${usd(r.availableAfterPay)}. ${
-            r.needsOwnerSignature
-              ? "Exceeds autonomous agent ceiling—requires owner co-signature."
-              : r.recommendation === "pay"
-              ? "Cleared for immediate USDC settlement on Arc Testnet."
-              : "Held to preserve protected operating reserve."
-          }`,
-          confidence: r.recommendation === "pay" ? 0.96 : r.recommendation === "escalate" ? 0.89 : 0.93,
+          )} | Reserve: ${usd(state.policy.reserveCents)} → Buffer after payment: ${usd(
+            r.availableAfterPay
+          )}.`,
+          confidence: 0.92,
           source: "claude" as const,
           alternatives: r.alternatives,
           snapshot: {
@@ -780,26 +629,22 @@ export default function Console() {
         };
       });
 
-      const auditEntry = makeAudit(
-        "agent.evaluated",
-        `Consequence Engine evaluated ${created.length} commitment(s) against ${usd(
-          state.balanceCents
-        )} live Arc Vault capital: ${created
-          .map((c) => `${c.obligationTitle} → ${c.action.toUpperCase()}`)
-          .join(" · ")}`
-      );
+      const auditEntry = {
+        id: crypto.randomUUID(),
+        payload: {},
+        prevHash: "0x0",
+        hash: "0x" + crypto.randomUUID().replace(/-/g, ""),
+        kind: "agent.evaluated",
+        message: `Evaluated ${created.length} obligation(s) against ${usd(state.balanceCents)} Vault USDC.`,
+        at: new Date().toISOString(),
+      };
 
       persistLiveState({
         ...state,
-        obligations: currentObligations,
         decisions: [...created, ...state.decisions],
         audit: [auditEntry, ...(state.audit || [])],
       });
-      setFeedback(
-        `Agent Cycle Complete: Evaluated ${created.length} commitment(s) (${created
-          .map((c) => c.action.toUpperCase())
-          .join(", ")}) against your ${usd(state.balanceCents)} Arc Vault!`
-      );
+      setFeedback(`Agent evaluated ${created.length} obligation(s).`);
       setView("decisions");
     });
 
@@ -809,22 +654,20 @@ export default function Console() {
       const obligation = state.obligations.find((o) => o.id === decision.obligationId);
       if (!obligation) throw new Error("Matching obligation record not found.");
 
-      // 1. Try autonomous vault agent execution first
       try {
         const result = await callAPI("/api/agent/execute", { decisionId: decision.id });
         if (result?.hash) {
           await refresh();
-          setFeedback(`Autonomous Vault settlement confirmed on Arc Testnet: ${result.hash}`);
+          setFeedback(`Vault settlement confirmed on Arc: ${result.hash}`);
           return;
         }
       } catch {}
 
-      // 2. Settle directly on Arc Testnet via connected wallet
       const provider = await getActiveWalletProvider();
-      if (!provider) throw new Error("Connect your wallet to sign and settle this USDC payment on Arc Testnet.");
+      if (!provider) throw new Error("Connect your wallet to sign and settle this USDC payment.");
       const accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
       const signer = accounts?.[0];
-      if (!signer || !isAddress(signer)) throw new Error("No active EVM wallet account selected.");
+      if (!signer || !isAddress(signer)) throw new Error("No active EVM wallet selected.");
       const checksumSigner = getAddress(signer);
 
       await ensureArcNetwork(provider);
@@ -843,9 +686,9 @@ export default function Console() {
         chain: arc,
       });
 
-      setFeedback(`Settling ${usd(obligation.amountCents)} USDC on Arc Testnet (${hash.slice(0, 10)}…)`);
+      setFeedback(`Settling ${usd(obligation.amountCents)} USDC on Arc (${hash.slice(0, 10)}…)`);
       const receipt = await getArcClient().waitForTransactionReceipt({ hash, timeout: 90000 });
-      if (receipt.status !== "success") throw new Error("Settlement transaction reverted on Arc Testnet.");
+      if (receipt.status !== "success") throw new Error("Settlement reverted on Arc Testnet.");
 
       const nextObligations = state.obligations.map((o) =>
         o.id === obligation.id ? { ...o, status: "paid" as const } : o
@@ -853,13 +696,15 @@ export default function Console() {
       const nextDecisions = state.decisions.map((d) =>
         d.id === decision.id ? { ...d, status: "executed" as const, txHash: hash } : d
       );
-      const auditEntry = makeAudit(
-        "settlement.confirmed",
-        `Settled "${obligation.title}" (${usd(obligation.amountCents)} USDC) to ${shortAddr(
-          obligation.recipient
-        )} on Arc Testnet. Tx: ${hash}`,
-        { txHash: hash, amountCents: obligation.amountCents, recipient: obligation.recipient }
-      );
+      const auditEntry = {
+        id: crypto.randomUUID(),
+        payload: {},
+        prevHash: "0x0",
+        hash: "0x" + crypto.randomUUID().replace(/-/g, ""),
+        kind: "settlement.confirmed",
+        message: `Settled "${obligation.title}" (${usd(obligation.amountCents)} USDC) on Arc. Tx: ${hash}`,
+        at: new Date().toISOString(),
+      };
 
       persistLiveState({
         ...state,
@@ -869,7 +714,7 @@ export default function Console() {
       });
 
       await syncOnchainBalances(state.vaultAddress || DEFAULT_VAULT_ADDRESS, checksumSigner);
-      setFeedback(`Payment settled on Arc Testnet! Arcscan Receipt: ${hash}`);
+      setFeedback(`Settled on Arc Testnet! Receipt: ${hash}`);
     });
 
   const approve = async (decision: Decision) =>
@@ -891,13 +736,13 @@ export default function Console() {
         account: owner,
         chain: arc,
       });
-      setFeedback(`Owner approval broadcast on Arc: ${hash}. Once confirmed, click Settle USDC on Arc.`);
+      setFeedback(`Owner approval broadcast: ${hash}`);
     });
 
   const setRecipientOnchain = async (allowed: boolean) =>
     runAction(async () => {
       const vaultAddr = state.vaultAddress || DEFAULT_VAULT_ADDRESS;
-      if (!isAddress(recipientInput)) throw new Error("Enter a valid EVM recipient address (0x...)");
+      if (!isAddress(recipientInput)) throw new Error("Enter a valid 0x recipient address");
       const { provider, address: owner } = await requireOwnerProvider();
       const wallet = createWalletClient({ chain: arc, transport: custom(provider as any) });
       const hash = await wallet.writeContract({
@@ -911,31 +756,8 @@ export default function Console() {
       const receipt = await getArcClient().waitForTransactionReceipt({ hash, timeout: 90000 });
       if (receipt.status !== "success") throw new Error("Recipient configuration reverted");
       await refresh();
-      setFeedback(`Recipient ${allowed ? "allowlisted" : "revoked"} on QuorailVault.sol. Tx: ${hash}`);
+      setFeedback(`Recipient ${allowed ? "allowlisted" : "revoked"} on Vault. Tx: ${hash}`);
     });
-
-  const exportAuditJson = () => {
-    const report = {
-      protocol: "Quorail — The Financial Consequence Engine",
-      version: "4.7",
-      network: "Arc Testnet (Chain ID 5042002)",
-      vaultAddress: state.vaultAddress || DEFAULT_VAULT_ADDRESS,
-      exportedAt: new Date().toISOString(),
-      vaultBalanceUSDC: (state.balanceCents / 100).toFixed(2),
-      protectedReserveUSDC: (state.policy.reserveCents / 100).toFixed(2),
-      obligations: state.obligations,
-      decisions: state.decisions,
-      onchainTransfers,
-      auditTrail: state.audit,
-    };
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `quorail-arc-audit-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
   const { committed, availableAfterCommitments, coverage } = useMemo(
     () => forecast(state.balanceCents, state.obligations, state.policy),
@@ -954,13 +776,8 @@ export default function Console() {
       (state.obligations.find((o) => o.id === decision.obligationId)?.amountCents || 0),
     0
   );
-  const totalOnchainVolumeCents =
-    verifiedAmount +
-    onchainTransfers.reduce((s, t) => s + t.amountCents, 0);
 
   if (!ready) return <Skeleton />;
-
-  const activeVault = state.vaultAddress || DEFAULT_VAULT_ADDRESS;
 
   return (
     <div className="console-layout">
@@ -974,28 +791,28 @@ export default function Console() {
           >
             <X size={19} />
           </button>
-          <div className="sidebar-caption">FINANCIAL CONSEQUENCE ENGINE</div>
+          <div className="sidebar-caption">CONSEQUENCE ENGINE</div>
         </div>
         <div className="side-workspace">
           <div className="workspace-icon">Q</div>
           <div>
-            <strong>Operating Treasury</strong>
-            <span>Arc Testnet · Live Vault</span>
+            <strong>Arc Treasury</strong>
+            <span>{usd(state.balanceCents)} USDC Live</span>
           </div>
           <ChevronDown size={15} />
         </div>
-        <div className="sidebar-group-label">TREASURY OPERATIONS</div>
+        <div className="sidebar-group-label">TREASURY</div>
         <nav className="console-nav">
           {(
             [
               { id: "overview", name: "Overview", icon: LayoutGrid },
-              { id: "vault", name: "Deposit & Vault", icon: Shield },
               { id: "obligations", name: "Obligations", icon: Wallet },
-              { id: "decisions", name: "Decision ledger", icon: GitBranch },
-              { id: "proof", name: "Settlement proof", icon: ReceiptText },
-              { id: "simulation", name: "What if?", icon: Activity },
-              { id: "policy", name: "Policy & guardrails", icon: ShieldCheck },
-              { id: "activity", name: "Activity log", icon: Clock3 },
+              { id: "decisions", name: "Decisions", icon: GitBranch },
+              { id: "vault", name: "Vault & Deposit", icon: Shield },
+              { id: "proof", name: "Receipts", icon: ReceiptText },
+              { id: "simulation", name: "Simulator", icon: Activity },
+              { id: "policy", name: "Guardrails", icon: ShieldCheck },
+              { id: "activity", name: "Activity", icon: Clock3 },
             ] as const
           ).map((i) => {
             const Icon = i.icon;
@@ -1011,25 +828,25 @@ export default function Console() {
                 <Icon size={18} />
                 {i.name}
                 {i.id === "obligations" && <span className="nav-count">{pending.length}</span>}
-                {i.id === "decisions" && state.decisions.length > 0 && (
-                  <span className="nav-count">{state.decisions.length}</span>
-                )}
               </button>
             );
           })}
         </nav>
-        <div className="sidebar-group-label second">ON-CHAIN EXPLORER</div>
+        <div className="sidebar-group-label second">TESTNET TOOLS</div>
         <div className="console-nav">
-          <Link href="/docs">
-            <BookOpen size={18} /> Architecture & Docs <ArrowUpRight size={15} />
-          </Link>
+          <button onClick={() => setShowFaucet(true)}>
+            <Droplets size={18} /> Claim Testnet USDC <ArrowUpRight size={15} />
+          </button>
           <a
-            href={`${explorer}/address/${activeVault}`}
+            href={`${explorer}/address/${state.vaultAddress || DEFAULT_VAULT_ADDRESS}`}
             target="_blank"
             rel="noreferrer"
           >
             <Compass size={18} /> Vault on Arcscan <ArrowUpRight size={15} />
           </a>
+          <Link href="/docs">
+            <BookOpen size={18} /> Documentation <ArrowUpRight size={15} />
+          </Link>
         </div>
         <div className="sidebar-spacer" />
         <div className="sidebar-network">
@@ -1037,8 +854,8 @@ export default function Console() {
             <span />
           </span>
           <div>
-            <strong>ARC TESTNET (5042002)</strong>
-            <small>Vault: {usd(state.balanceCents)} USDC</small>
+            <strong>ARC TESTNET</strong>
+            <small>Chain 5042002 · USDC</small>
           </div>
         </div>
         <div className="sidebar-footer">
@@ -1047,12 +864,12 @@ export default function Console() {
             <strong>
               {connectedAddr
                 ? `${connectedAddr.slice(0, 6)}…${connectedAddr.slice(-4)}`
-                : "Wallet Ready"}
+                : "Not connected"}
             </strong>
             <span>
               {walletUsdcCents !== null
-                ? `Wallet: ${usd(walletUsdcCents)} USDC`
-                : "Arc Testnet Operator"}
+                ? `Wallet: ${usd(walletUsdcCents)}`
+                : "Arc Operator"}
             </span>
           </div>
           <a href="https://github.com/paulos-ui/quorail" target="_blank" rel="noreferrer">
@@ -1071,22 +888,22 @@ export default function Console() {
             <Menu size={21} />
           </button>
           <div className="console-breadcrumb">
-            ARC TREASURY <span>/</span> <b>{view.toUpperCase()}</b>
+            TREASURY <span>/</span> <b>{view.toUpperCase()}</b>
           </div>
           <div className="top-actions">
-            <span className="mode-flag live">ARC TESTNET · LIVE</span>
             <button
-              className="icon-button"
-              title="Export JSON Audit Report"
-              onClick={exportAuditJson}
+              className="btn"
+              style={{
+                padding: "7px 13px",
+                fontSize: "12.5px",
+                border: "1px solid rgba(25,22,19,0.22)",
+                background: "#fff",
+              }}
+              onClick={() => setShowFaucet(true)}
             >
-              <Download size={17} />
+              <Droplets size={15} /> Claim Testnet USDC
             </button>
-            <button
-              className="icon-button"
-              title="Refresh on-chain state"
-              onClick={() => void refresh()}
-            >
+            <button className="icon-button" title="Refresh" onClick={() => void refresh()}>
               <RefreshCw size={18} />
             </button>
             <WalletConnect
@@ -1099,11 +916,7 @@ export default function Console() {
               onSuccess={handleWalletAccess}
             />
             {connectedAddr && (
-              <button
-                className="icon-button"
-                title="Disconnect wallet"
-                onClick={() => void handleLogout()}
-              >
+              <button className="icon-button" title="Disconnect" onClick={() => void handleLogout()}>
                 <LogOut size={18} />
               </button>
             )}
@@ -1114,10 +927,10 @@ export default function Console() {
           <motion.div
             key={view}
             className="console-body"
-            initial={{ opacity: 0, y: 11 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.22 }}
+            transition={{ duration: 0.2 }}
           >
             {error && (
               <div className="notification error">
@@ -1142,30 +955,18 @@ export default function Console() {
               <>
                 <div className="page-lead">
                   <div>
-                    <div className="small-heading">
-                      LIVE TREASURY VAULT · ARC TESTNET (5042002)
-                    </div>
+                    <div className="small-heading">ARC TESTNET · LIVE TREASURY</div>
                     <h1>
-                      Your money, in <em>context.</em>
+                      Treasury <em>Overview.</em>
                     </h1>
-                    <p>
-                      Fund your Arc vault with USDC, register real obligations, and let the Consequence Engine evaluate and settle payouts on-chain.
-                    </p>
                   </div>
-                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                     <button
                       className="btn"
-                      style={{ border: "1px solid rgba(25,22,19,0.25)", background: "#fff" }}
-                      onClick={() => setShowDeposit(true)}
-                    >
-                      <ArrowDownLeft size={17} /> Deposit USDC
-                    </button>
-                    <button
-                      className="btn"
-                      style={{ border: "1px solid rgba(25,22,19,0.25)", background: "#fff" }}
+                      style={{ border: "1px solid rgba(25,22,19,0.22)", background: "#fff" }}
                       onClick={() => setShowForm(true)}
                     >
-                      <Plus size={17} /> Add Obligation
+                      <Plus size={17} /> New Obligation
                     </button>
                     <button
                       className="btn btn-dark"
@@ -1173,30 +974,8 @@ export default function Console() {
                       onClick={() => void runAgent()}
                     >
                       <Sparkles size={17} />
-                      {working ? "Evaluating..." : "Run Agent Cycle"}
+                      {working ? "Evaluating..." : "Run Agent"}
                       <ArrowUpRight size={16} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Live Executive Treasury Status Strip */}
-                <div className="qr-memo-bar">
-                  <div>
-                    <strong>LIVE CONSEQUENCE STATUS:</strong> Vault holds{" "}
-                    <code>{usd(state.balanceCents)} USDC</code> with{" "}
-                    <code>{usd(state.policy.reserveCents)} USDC</code> protected reserve →{" "}
-                    <strong>{usd(availableAfterCommitments)} USDC</strong> free operating buffer.
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px" }}>
-                    <span>VAULT: <code>{shortAddr(activeVault)}</code></span>
-                    <button
-                      type="button"
-                      className="qr-copy-btn"
-                      style={{ background: "rgba(255,255,255,0.12)", color: "#fff", border: "none" }}
-                      onClick={() => copyToClipboard(activeVault, "vault")}
-                    >
-                      {copiedText === "vault" ? <Check size={12} /> : <Copy size={12} />}
-                      {copiedText === "vault" ? "Copied" : "Copy"}
                     </button>
                   </div>
                 </div>
@@ -1204,17 +983,17 @@ export default function Console() {
                 <div className="metric-grid">
                   <div
                     className="metric-card metric-primary"
-                    onClick={() => setShowDeposit(true)}
+                    onClick={() => setView("vault")}
                     style={{ cursor: "pointer" }}
                   >
                     <div className="metric-top">
-                      <span>OPERATING CAPITAL (VAULT)</span>
+                      <span>VAULT BALANCE</span>
                       <Wallet size={18} />
                     </div>
                     <strong>{usd(state.balanceCents)}</strong>
                     <div className="metric-bottom">
                       <span>
-                        <i className="tiny-star" /> Live on Arc · Click to Deposit USDC
+                        <i className="tiny-star" /> Arc Testnet USDC
                       </span>
                       <ArrowUpRight size={16} />
                     </div>
@@ -1222,17 +1001,17 @@ export default function Console() {
 
                   <div
                     className="metric-card"
-                    onClick={() => setShowForm(true)}
+                    onClick={() => setView("obligations")}
                     style={{ cursor: "pointer" }}
                   >
                     <div className="metric-top">
-                      <span>UPCOMING OBLIGATIONS</span>
+                      <span>OBLIGATIONS</span>
                       <Clock3 size={18} />
                     </div>
                     <strong>{usd(committed)}</strong>
                     <div className="metric-bottom">
-                      <span>{pending.length} active commitment(s)</span>
-                      <span>+ Add new ↗</span>
+                      <span>{pending.length} pending</span>
+                      <span>View ↗</span>
                     </div>
                   </div>
 
@@ -1242,126 +1021,43 @@ export default function Console() {
                     style={{ cursor: "pointer" }}
                   >
                     <div className="metric-top">
-                      <span>PROTECTED RESERVE</span>
+                      <span>RESERVE FLOOR</span>
                       <Shield size={18} />
                     </div>
                     <strong>{usd(state.policy.reserveCents)}</strong>
                     <div className="metric-bottom">
-                      <span>Minimum floor · Click to edit</span>
+                      <span>Protected minimum</span>
                       <SlidersHorizontal size={15} />
                     </div>
                   </div>
 
                   <div className="metric-card">
                     <div className="metric-top">
-                      <span>DISCRETIONARY BUFFER</span>
+                      <span>FREE BUFFER</span>
                       <Activity size={18} />
                     </div>
                     <strong className={availableAfterCommitments < 0 ? "negative" : ""}>
                       {usd(availableAfterCommitments)}
                     </strong>
                     <div className="metric-bottom">
-                      <span>
-                        {availableAfterCommitments < 0
-                          ? "Liquidity deficit · Deposit USDC"
-                          : "Available to spend safely"}
-                      </span>
+                      <span>{availableAfterCommitments < 0 ? "Deficit" : "Safe to spend"}</span>
                       <span className="metric-arrow">↗</span>
                     </div>
                   </div>
                 </div>
 
-                {/* 1-Click Scenario Launcher when ledger is empty */}
-                {pending.length === 0 && (
-                  <div style={{ marginBottom: "22px" }}>
-                    <div className="small-heading" style={{ marginBottom: "10px" }}>
-                      QUICK-TEST CONSEQUENCE SCENARIOS (1-CLICK STAGE AGAINST YOUR {usd(state.balanceCents)} VAULT)
-                    </div>
-                    <div className="qr-quick-presets">
-                      <button
-                        type="button"
-                        className="qr-preset-card"
-                        onClick={() =>
-                          addQuickObligation({
-                            title: "Arc RPC Node & Indexer Telemetry",
-                            counterparty: "Helios Infra",
-                            amountCents: 200,
-                            daysOut: 1,
-                            category: "Infrastructure",
-                            priority: "critical",
-                          })
-                        }
-                      >
-                        <span className="qr-preset-tag pay">EXPECTED: PAY · $2.00 USDC</span>
-                        <strong>+ Stage $2.00 Node Telemetry Invoice</strong>
-                        <small style={{ opacity: 0.72 }}>
-                          Fits safely inside your {usd(availableAfterCommitments)} free buffer and $12.00 autonomous limit.
-                        </small>
-                      </button>
-
-                      <button
-                        type="button"
-                        className="qr-preset-card"
-                        onClick={() =>
-                          addQuickObligation({
-                            title: "Smart Contract Audit Milestone",
-                            counterparty: "Spearbit Security",
-                            amountCents: 1350,
-                            daysOut: 3,
-                            category: "Contractors",
-                            priority: "high",
-                          })
-                        }
-                      >
-                        <span className="qr-preset-tag escalate">EXPECTED: ESCALATE · $13.50 USDC</span>
-                        <strong>+ Stage $13.50 Security Audit Invoice</strong>
-                        <small style={{ opacity: 0.72 }}>
-                          Exceeds the $12.00 autonomous agent cap—triggers human owner approval.
-                        </small>
-                      </button>
-
-                      <button
-                        type="button"
-                        className="qr-preset-card"
-                        onClick={() =>
-                          addQuickObligation({
-                            title: "Cloud GPU Cluster Prepayment",
-                            counterparty: "Nimbus Compute",
-                            amountCents: 1700,
-                            daysOut: 7,
-                            category: "Operations",
-                            priority: "normal",
-                          })
-                        }
-                      >
-                        <span className="qr-preset-tag hold">EXPECTED: HOLD · $17.00 USDC</span>
-                        <strong>+ Stage $17.00 Cloud GPU Prepayment</strong>
-                        <small style={{ opacity: 0.72 }}>
-                          Would breach your {usd(state.policy.reserveCents)} Protected Reserve floor—engine recommends HOLD.
-                        </small>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
                 <div className="dashboard-duo">
                   <Constellation state={state} />
                   <div className="liquidity-panel">
                     <div className="panel-overline">
-                      ON-CHAIN POSITION <span>HORIZON / {state.policy.horizonDays}D</span>
+                      LIQUIDITY WINDOW <span>14D</span>
                     </div>
                     <h2>
-                      The protected
-                      <br />
-                      <em>operating window.</em>
+                      Runway &amp; <em>coverage.</em>
                     </h2>
-                    <p>
-                      With {usd(state.balanceCents)} in your Arc Testnet vault and a {usd(state.policy.reserveCents)} reserve floor, you have{" "}
-                      <strong>{usd(availableAfterCommitments)}</strong> in free buffer after current commitments.
-                    </p>
                     <div className="liquidity-meter">
                       <div className="meter-heading">
-                        <span>COMMITMENT COVERAGE</span>
+                        <span>COVERAGE RATIO</span>
                         <strong>{coverage}%</strong>
                       </div>
                       <div className="meter-track">
@@ -1370,22 +1066,22 @@ export default function Console() {
                     </div>
                     <div className="liquidity-facts">
                       <div>
-                        <span>Vault USDC balance</span>
+                        <span>Vault USDC</span>
                         <strong>{usd(state.balanceCents)}</strong>
                       </div>
                       <div>
-                        <span>Connected Wallet USDC</span>
+                        <span>Wallet USDC</span>
                         <strong>
-                          {walletUsdcCents !== null ? usd(walletUsdcCents) : "Connect wallet"}
+                          {walletUsdcCents !== null ? usd(walletUsdcCents) : "—"}
                         </strong>
                       </div>
                       <div>
-                        <span>Indexed Arc transfers</span>
-                        <strong>{confirmed.length + onchainTransfers.length}</strong>
+                        <span>Settled</span>
+                        <strong>{confirmed.length}</strong>
                       </div>
                     </div>
-                    <button className="panel-bottom-link" onClick={() => setShowDeposit(true)}>
-                      + Deposit USDC into Vault <ArrowUpRight size={17} />
+                    <button className="panel-bottom-link" onClick={() => setShowFaucet(true)}>
+                      Need test funds? Claim Arc Testnet USDC <ArrowUpRight size={17} />
                     </button>
                   </div>
                 </div>
@@ -1393,21 +1089,12 @@ export default function Console() {
                 <div className="table-card">
                   <div className="card-heading">
                     <div>
-                      <div className="small-heading">ACTIVE COMMITMENTS</div>
-                      <h2>Upcoming obligations</h2>
+                      <div className="small-heading">COMMITMENTS</div>
+                      <h2>Pending obligations</h2>
                     </div>
-                    <div style={{ display: "flex", gap: "10px" }}>
-                      <button
-                        className="btn btn-dark"
-                        style={{ padding: "8px 14px", fontSize: "13px" }}
-                        onClick={() => setShowForm(true)}
-                      >
-                        <Plus size={15} /> Add Obligation
-                      </button>
-                      <button className="small-plain-button" onClick={() => setView("obligations")}>
-                        Manage all <ArrowUpRight size={16} />
-                      </button>
-                    </div>
+                    <button className="small-plain-button" onClick={() => setShowForm(true)}>
+                      + Add obligation
+                    </button>
                   </div>
                   <ObligationTable
                     obligations={pending}
@@ -1422,45 +1109,30 @@ export default function Console() {
               <>
                 <div className="page-lead">
                   <div>
-                    <div className="small-heading">COMMITMENTS / CASH OUTFLOWS</div>
+                    <div className="small-heading">COMMITMENTS</div>
                     <h1>
-                      What the treasury <em>owes.</em>
+                      Obligation <em>Register.</em>
                     </h1>
-                    <p>
-                      Register invoices, contractor payouts, and server renewals with real Arc Testnet recipient addresses.
-                    </p>
                   </div>
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <button className="btn" style={{ border: "1px solid rgba(25,22,19,0.22)" }} onClick={() => setShowForm(true)}>
-                      <Plus size={17} /> Add obligation
-                    </button>
-                    <button className="btn btn-dark" disabled={working} onClick={() => void runAgent()}>
-                      <Sparkles size={17} /> Run Agent Cycle
-                    </button>
-                  </div>
+                  <button className="btn btn-dark" onClick={() => setShowForm(true)}>
+                    <Plus size={17} /> Add obligation
+                  </button>
                 </div>
                 <div className="obligation-summaries">
                   <div>
-                    <span>OPEN COMMITMENTS</span>
+                    <span>OPEN</span>
                     <strong>{pending.length}</strong>
                   </div>
                   <div>
-                    <span>AMOUNT OUTSTANDING</span>
+                    <span>TOTAL DUE</span>
                     <strong>{usd(pending.reduce((s, o) => s + o.amountCents, 0))}</strong>
                   </div>
                   <div>
-                    <span>CRITICAL PRIORITY</span>
+                    <span>CRITICAL</span>
                     <strong>{pending.filter((o) => o.priority === "critical").length}</strong>
                   </div>
                 </div>
                 <div className="table-card">
-                  <div className="card-heading">
-                    <div>
-                      <div className="small-heading">PAYMENT CALENDAR</div>
-                      <h2>Obligation register</h2>
-                    </div>
-                    <span className="table-side-note">SETTLES IN USDC ON ARC TESTNET</span>
-                  </div>
                   <ObligationTable
                     obligations={state.obligations}
                     onDelete={handleDeleteObligation}
@@ -1474,16 +1146,17 @@ export default function Console() {
               <>
                 <div className="page-lead">
                   <div>
-                    <div className="small-heading">OBSERVE / REASON / AUTHORIZE / SETTLE</div>
+                    <div className="small-heading">PAY / HOLD / ESCALATE</div>
                     <h1>
-                      Every choice, <em>explained.</em>
+                      Decision <em>Ledger.</em>
                     </h1>
-                    <p>
-                      Auditable PAY, HOLD, and ESCALATE decisions evaluated against your live {usd(state.balanceCents)} Arc Testnet vault balance.
-                    </p>
                   </div>
                   <div style={{ display: "flex", gap: "10px" }}>
-                    <button className="btn" style={{ border: "1px solid rgba(25,22,19,0.22)" }} onClick={() => setShowForm(true)}>
+                    <button
+                      className="btn"
+                      style={{ border: "1px solid rgba(25,22,19,0.22)" }}
+                      onClick={() => setShowForm(true)}
+                    >
                       <Plus size={17} /> New Obligation
                     </button>
                     <button
@@ -1492,17 +1165,8 @@ export default function Console() {
                       onClick={() => void runAgent()}
                     >
                       <Sparkles size={17} />
-                      {working ? "Evaluating..." : "Run Agent Cycle"}
+                      {working ? "Evaluating..." : "Run Agent"}
                     </button>
-                  </div>
-                </div>
-                <div className="decision-disclosure">
-                  <ShieldCheck size={23} />
-                  <div>
-                    <b>AI reasoning is separated from custody.</b>
-                    <p>
-                      The Consequence Engine evaluates whether paying now preserves your {usd(state.policy.reserveCents)} reserve floor, and approved payouts settle in USDC on Arc Testnet.
-                    </p>
                   </div>
                 </div>
                 {!state.decisions.length ? (
@@ -1510,16 +1174,18 @@ export default function Console() {
                     <div className="empty-icon">
                       <GitBranch size={32} />
                     </div>
-                    <h2>Ready to evaluate your commitments.</h2>
-                    <p>
-                      Click Run Agent Cycle below to evaluate your pending obligations—or automatically generate and assess a 3-part PAY / HOLD / ESCALATE scenario against your live {usd(state.balanceCents)} Vault!
-                    </p>
+                    <h2>No decisions yet.</h2>
+                    <p>Add an obligation and click Run Agent to evaluate payment consequences.</p>
                     <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-                      <button className="btn" style={{ border: "1px solid rgba(25,22,19,0.25)" }} onClick={() => setShowForm(true)}>
-                        <Plus size={16} /> Add Custom Obligation
+                      <button
+                        className="btn"
+                        style={{ border: "1px solid rgba(25,22,19,0.25)" }}
+                        onClick={() => setShowForm(true)}
+                      >
+                        <Plus size={16} /> Add Obligation
                       </button>
                       <button className="btn btn-copper" onClick={() => void runAgent()}>
-                        <Sparkles size={16} /> Run Agent Cycle Now <ArrowUpRight size={17} />
+                        Run Agent <ArrowUpRight size={17} />
                       </button>
                     </div>
                   </div>
@@ -1547,11 +1213,11 @@ export default function Console() {
                         <div className="decision-text">{d.reason}</div>
                         <div className="decision-details">
                           <div>
-                            <span>DECISION ENGINE</span>
-                            <strong>Claude + Consequence Engine</strong>
+                            <span>ENGINE</span>
+                            <strong>Claude + Consequence Math</strong>
                           </div>
                           <div>
-                            <span>PROJECTED BUFFER</span>
+                            <span>BUFFER AFTER</span>
                             <strong>{usd(d.snapshot.disposableCents)}</strong>
                           </div>
                           <div>
@@ -1561,7 +1227,7 @@ export default function Console() {
                         </div>
                         {expanded === d.id && (
                           <div className="alternatives">
-                            <div className="small-heading">COUNTERFACTUAL PATHS CONSIDERED</div>
+                            <div className="small-heading">ALTERNATIVES</div>
                             {d.alternatives.map((a, i) => (
                               <div key={i}>
                                 <span>{a.label}</span>
@@ -1573,7 +1239,7 @@ export default function Console() {
                         )}
                         <div className="decision-footer">
                           <button onClick={() => setExpanded(expanded === d.id ? null : d.id)}>
-                            {expanded === d.id ? "Hide reasoning paths" : "Inspect alternatives"}{" "}
+                            {expanded === d.id ? "Hide alternatives" : "Compare paths"}{" "}
                             <ArrowRight size={14} />
                           </button>
                           <div className="decision-cta">
@@ -1583,17 +1249,17 @@ export default function Console() {
                                 target="_blank"
                                 rel="noreferrer"
                               >
-                                View Arcscan Receipt <ExternalLink size={14} />
+                                Arcscan Receipt <ExternalLink size={14} />
                               </a>
                             )}
                             {d.status === "escalated" && (
                               <button disabled={working} onClick={() => void approve(d)}>
-                                Approve on Vault <ArrowUpRight size={14} />
+                                Owner Approve <ArrowUpRight size={14} />
                               </button>
                             )}
                             {d.status !== "executed" && (
                               <button disabled={working} onClick={() => void settle(d)}>
-                                Settle USDC on Arc <ArrowUpRight size={14} />
+                                Settle on Arc <ArrowUpRight size={14} />
                               </button>
                             )}
                           </div>
@@ -1609,66 +1275,46 @@ export default function Console() {
               <>
                 <div className="page-lead">
                   <div>
-                    <div className="small-heading">ON-CHAIN CUSTODY & FUNDING · ARC TESTNET</div>
-                    <h1>Deposit & Vault Controls.</h1>
-                    <p>
-                      Fund the deployed Quorail Vault contract with Arc Testnet USDC and configure on-chain recipient permissions.
-                    </p>
+                    <div className="small-heading">ARC TESTNET SMART CONTRACT</div>
+                    <h1>
+                      Vault &amp; <em>Funding.</em>
+                    </h1>
                   </div>
                   <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                    <button className="btn btn-dark" onClick={() => setShowDeposit(true)}>
-                      <ArrowDownLeft size={17} /> Deposit USDC to Vault
-                    </button>
-                    <a
+                    <button
                       className="btn"
-                      style={{ border: "1px solid rgba(25,22,19,0.22)" }}
-                      href={`${explorer}/address/${activeVault}`}
-                      target="_blank"
-                      rel="noreferrer"
+                      style={{ border: "1px solid rgba(25,22,19,0.22)", background: "#fff" }}
+                      onClick={() => setShowFaucet(true)}
                     >
-                      View Contract on Arcscan <ArrowUpRight size={17} />
-                    </a>
+                      <Droplets size={16} /> Claim Testnet USDC
+                    </button>
+                    <button className="btn btn-dark" onClick={() => setShowDeposit(true)}>
+                      <ArrowDownLeft size={17} /> Deposit to Vault
+                    </button>
                   </div>
                 </div>
 
                 <div className="qv2-vault-grid">
                   <div className="qv2-vault-intro">
-                    <span>ARC TESTNET TREASURY VAULT</span>
+                    <span>QUORAILVAULT.SOL</span>
                     <ShieldCheck size={66} />
                     <strong>{usd(state.balanceCents)}</strong>
-                    <small>Live on-chain ERC-20 USDC balance held by QuorailVault.sol</small>
-                    <button
-                      className="btn btn-dark"
-                      style={{ marginTop: "14px" }}
-                      onClick={() => setShowDeposit(true)}
-                    >
-                      <ArrowDownLeft size={16} /> Deposit USDC now
-                    </button>
+                    <small>On-chain USDC balance</small>
                   </div>
                   <div className="qv2-vault-data">
                     <div>
-                      <span>VAULT CONTRACT ADDRESS</span>
-                      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "6px" }}>
-                        <code title={activeVault}>{shortAddr(activeVault)}</code>
-                        <button
-                          type="button"
-                          className="qr-copy-btn"
-                          onClick={() => copyToClipboard(activeVault, "vaultCard")}
-                        >
-                          {copiedText === "vaultCard" ? <Check size={12} /> : <Copy size={12} />}
-                          {copiedText === "vaultCard" ? "Copied" : "Copy full address"}
-                        </button>
-                      </div>
+                      <span>VAULT CONTRACT</span>
+                      <code>{state.vaultAddress || DEFAULT_VAULT_ADDRESS}</code>
                     </div>
                     <div>
-                      <span>YOUR CONNECTED WALLET</span>
+                      <span>CONNECTED WALLET</span>
                       <code>
-                        {connectedAddr ? shortAddr(connectedAddr) : "Click Connect Wallet in top bar"}
-                        {walletUsdcCents !== null ? ` · ${usd(walletUsdcCents)} USDC` : ""}
+                        {connectedAddr || "Not connected"}
+                        {walletUsdcCents !== null ? ` (${usd(walletUsdcCents)} USDC)` : ""}
                       </code>
                     </div>
                     <div>
-                      <span>PROTECTED RESERVE FLOOR</span>
+                      <span>RESERVE FLOOR</span>
                       <strong>{usd(state.policy.reserveCents)}</strong>
                     </div>
                     <div>
@@ -1676,7 +1322,7 @@ export default function Console() {
                       <strong>{usd(state.policy.autonomousLimitCents)}</strong>
                     </div>
                     <div>
-                      <span>DAILY CONTRACT LIMIT</span>
+                      <span>DAILY LIMIT</span>
                       <strong>{usd(state.policy.dailyLimitCents)}</strong>
                     </div>
                   </div>
@@ -1684,14 +1330,12 @@ export default function Console() {
 
                 <div className="qv2-vault-allow">
                   <div>
-                    <span className="small-heading">ON-CHAIN RECIPIENT ALLOWLIST</span>
+                    <span className="small-heading">ALLOWLIST</span>
                     <h2>Recipient permissions.</h2>
-                    <p>
-                      Allowlist contractor or vendor wallet addresses on <code>QuorailVault.sol</code> for autonomous agent payouts.
-                    </p>
+                    <p>Authorize recipient addresses on-chain in QuorailVault.sol.</p>
                   </div>
                   <div className="qv2-vault-control">
-                    <label htmlFor="vault-recipient">RECIPIENT WALLET ADDRESS</label>
+                    <label htmlFor="vault-recipient">RECIPIENT ADDRESS</label>
                     <input
                       id="vault-recipient"
                       value={recipientInput}
@@ -1700,10 +1344,10 @@ export default function Console() {
                     />
                     <div>
                       <button disabled={working} onClick={() => void setRecipientOnchain(true)}>
-                        Allow recipient ↗
+                        Allow ↗
                       </button>
                       <button disabled={working} onClick={() => void setRecipientOnchain(false)}>
-                        Revoke access ↗
+                        Revoke ↗
                       </button>
                     </div>
                   </div>
@@ -1715,132 +1359,79 @@ export default function Console() {
               <>
                 <div className="page-lead">
                   <div>
-                    <div className="small-heading">ARC / USDC / TAMEION SETTLEMENT EVIDENCE</div>
-                    <h1>Payments with proof.</h1>
-                    <p>
-                      Every executed decision and on-chain vault transfer is linked directly to its confirmed transaction hash on Arc Testnet.
-                    </p>
+                    <div className="small-heading">VERIFIABLE ON-CHAIN RECEIPTS</div>
+                    <h1>
+                      Settlement <em>Proof.</em>
+                    </h1>
                   </div>
                   <a
                     className="btn btn-dark"
-                    href={`${explorer}/address/${activeVault}`}
+                    href={`${explorer}/address/${state.vaultAddress || DEFAULT_VAULT_ADDRESS}`}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Inspect Vault on Arcscan <ArrowUpRight size={17} />
+                    Vault on Arcscan <ArrowUpRight size={17} />
                   </a>
                 </div>
                 <div className="q-proof-metrics">
                   <div>
-                    <span>VERIFIED ON-CHAIN TRANSFERS</span>
-                    <strong>{confirmed.length + onchainTransfers.length || 1}</strong>
+                    <span>SETTLEMENTS</span>
+                    <strong>{confirmed.length}</strong>
                   </div>
                   <div>
-                    <span>INDEXED VAULT VOLUME</span>
-                    <strong>
-                      {usd(totalOnchainVolumeCents > 0 ? totalOnchainVolumeCents : state.balanceCents)}
-                    </strong>
+                    <span>VOLUME</span>
+                    <strong>{usd(verifiedAmount)}</strong>
                   </div>
                   <div>
-                    <span>SETTLEMENT NETWORK</span>
-                    <strong>Arc Testnet (5042002)</strong>
+                    <span>NETWORK</span>
+                    <strong>Arc Testnet</strong>
                   </div>
                 </div>
-
-                <div className="q-proof-receipts">
-                  {confirmed.map((d) => {
-                    const o = state.obligations.find((item) => item.id === d.obligationId);
-                    return (
-                      <article key={d.id} className="q-proof-receipt">
-                        <div>
-                          <span className="small-heading">
-                            DECISION SETTLED / {new Date(d.createdAt).toLocaleDateString("en-GB")}
-                          </span>
-                          <h3>{d.obligationTitle}</h3>
-                          <p>{d.reason}</p>
-                          <div className="q-proof-recipient">
-                            RECEIVING WALLET <code>{o?.recipient || "Verified on Arcscan"}</code>
+                {confirmed.length ? (
+                  <div className="q-proof-receipts">
+                    {confirmed.map((d) => {
+                      const o = state.obligations.find((item) => item.id === d.obligationId);
+                      return (
+                        <article key={d.id} className="q-proof-receipt">
+                          <div>
+                            <span className="small-heading">
+                              EXECUTED / {new Date(d.createdAt).toLocaleDateString("en-GB")}
+                            </span>
+                            <h3>{d.obligationTitle}</h3>
+                            <p>{d.reason}</p>
+                            <div className="q-proof-recipient">
+                              RECIPIENT <code>{o?.recipient || "Verified on Arcscan"}</code>
+                            </div>
                           </div>
-                        </div>
-                        <div className="q-proof-amount">
-                          <strong>{o ? usd(o.amountCents) : "Confirmed"}</strong>
-                          <a
-                            href={`${explorer}/tx/${d.txHash}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            Verify on Arcscan <ExternalLink size={15} />
-                          </a>
-                          <small>
-                            TX / {d.txHash?.slice(0, 12)}…{d.txHash?.slice(-8)}
-                          </small>
-                        </div>
-                      </article>
-                    );
-                  })}
-
-                  {onchainTransfers.map((t, idx) => (
-                    <article key={`${t.txHash}-${idx}`} className="q-proof-receipt">
-                      <div>
-                        <span className="small-heading">
-                          ON-CHAIN ERC-20 {t.direction === "IN" ? "VAULT FUNDING" : "VAULT PAYOUT"} · BLOCK #{t.blockNumber}
-                        </span>
-                        <h3>
-                          {t.direction === "IN"
-                            ? "USDC Treasury Deposit into QuorailVault.sol"
-                            : "USDC Settlement Transfer from QuorailVault.sol"}
-                        </h3>
-                        <p>
-                          Indexed directly from Arc Testnet USDC token contract (<code>{ARC_USDC}</code>).
-                        </p>
-                        <div className="q-proof-recipient">
-                          {t.direction === "IN" ? "FUNDER WALLET" : "RECIPIENT WALLET"}{" "}
-                          <code>{t.counterparty}</code>
-                        </div>
-                      </div>
-                      <div className="q-proof-amount">
-                        <strong>{usd(t.amountCents)}</strong>
-                        <a
-                          href={`${explorer}/tx/${t.txHash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          Verify Tx on Arcscan <ExternalLink size={15} />
-                        </a>
-                        <small>
-                          TX / {t.txHash.slice(0, 12)}…{t.txHash.slice(-8)}
-                        </small>
-                      </div>
-                    </article>
-                  ))}
-
-                  {/* Always show verified on-chain Vault Custody Proof card */}
-                  <article className="q-proof-receipt">
-                    <div>
-                      <span className="small-heading">
-                        VERIFIED ON-CHAIN VAULT CUSTODY · CHAIN ID 5042002
-                      </span>
-                      <h3>QuorailVault.sol Active Treasury Custody</h3>
-                      <p>
-                        Live ERC-20 USDC balance held on-chain by the deployed Quorail Vault contract and governed by deterministic spending ceilings.
-                      </p>
-                      <div className="q-proof-recipient">
-                        VAULT CONTRACT <code>{activeVault}</code>
-                      </div>
+                          <div className="q-proof-amount">
+                            <strong>{o ? usd(o.amountCents) : "Confirmed"}</strong>
+                            <a
+                              href={`${explorer}/tx/${d.txHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Arcscan <ExternalLink size={15} />
+                            </a>
+                            <small>
+                              TX / {d.txHash?.slice(0, 12)}…{d.txHash?.slice(-8)}
+                            </small>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="empty-state">
+                    <div className="empty-icon">
+                      <ReceiptText size={32} />
                     </div>
-                    <div className="q-proof-amount">
-                      <strong>{usd(state.balanceCents)}</strong>
-                      <a
-                        href={`${explorer}/address/${activeVault}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Verify Contract on Arcscan <ExternalLink size={15} />
-                      </a>
-                      <small>ERC-20 USDC · ARC TESTNET</small>
-                    </div>
-                  </article>
-                </div>
+                    <h2>No settlements recorded yet.</h2>
+                    <p>Settle a decision on Arc Testnet to generate a live Arcscan receipt.</p>
+                    <button className="btn btn-dark" onClick={() => setView("decisions")}>
+                      Open Decisions <ArrowRight size={16} />
+                    </button>
+                  </div>
+                )}
               </>
             )}
 
@@ -1848,28 +1439,20 @@ export default function Console() {
               <>
                 <div className="page-lead">
                   <div>
-                    <div className="small-heading">STRESS-TEST AGAINST LIVE VAULT BALANCE</div>
+                    <div className="small-heading">COUNTERFACTUAL SANDBOX</div>
                     <h1>
                       What if we <em>paid?</em>
                     </h1>
-                    <p>
-                      Test how an unplanned invoice or incoming deposit affects your live {usd(state.balanceCents)} Vault runway before committing.
-                    </p>
                   </div>
                 </div>
                 <div className="qv2-sim-grid">
                   <div className="qv2-sim-controls">
-                    <span className="small-heading">CONSEQUENCE MODELING</span>
+                    <span className="small-heading">PARAMETERS</span>
                     <h2>
-                      Stress-test your
-                      <br />
-                      <em>live liquidity.</em>
+                      Simulate <em>impact.</em>
                     </h2>
-                    <p>
-                      Calculates against your live Arc Vault balance ({usd(state.balanceCents)}), upcoming commitments ({usd(committed)}), and reserve floor ({usd(state.policy.reserveCents)}).
-                    </p>
                     <label>
-                      PROPOSED NEW PAYOUT <strong>{usd(simSpend * 100)}</strong>
+                      HYPOTHETICAL PAYOUT <strong>{usd(simSpend * 100)}</strong>
                       <input
                         type="range"
                         min="0"
@@ -1880,7 +1463,7 @@ export default function Console() {
                       />
                     </label>
                     <label>
-                      EXPECTED USDC DEPOSIT <strong>{usd(simRevenue * 100)}</strong>
+                      EXPECTED INFLOW <strong>{usd(simRevenue * 100)}</strong>
                       <input
                         type="range"
                         min="0"
@@ -1892,7 +1475,7 @@ export default function Console() {
                     </label>
                   </div>
                   <div className="qv2-sim-results">
-                    <span className="small-heading">PROJECTED 14-DAY BUFFER</span>
+                    <span className="small-heading">PROJECTED BUFFER</span>
                     <div className="qv2-sim-big">
                       {usd(
                         state.balanceCents +
@@ -1902,26 +1485,6 @@ export default function Console() {
                           simSpend * 100
                       )}
                     </div>
-                    <span>DISCRETIONARY USDC BUFFER AFTER PAYOUT</span>
-                    <div className="qv2-sim-score">
-                      <i
-                        style={{
-                          width: `${Math.max(
-                            3,
-                            Math.min(
-                              100,
-                              ((state.balanceCents +
-                                simRevenue * 100 -
-                                committed -
-                                state.policy.reserveCents -
-                                simSpend * 100) /
-                                Math.max(1, state.balanceCents + simRevenue * 100)) *
-                                100
-                            )
-                          )}%`,
-                        }}
-                      />
-                    </div>
                     <h3>
                       {state.balanceCents +
                         simRevenue * 100 -
@@ -1929,27 +1492,17 @@ export default function Console() {
                         state.policy.reserveCents -
                         simSpend * 100 <
                       0
-                        ? "HOLD / Breaches Protected Reserve"
-                        : "PAYABLE / Reserve Floor Intact"}
+                        ? "HOLD · Breaches Reserve Floor"
+                        : "SAFE · Reserve Preserved"}
                     </h3>
-                    <p>
-                      {state.balanceCents +
-                        simRevenue * 100 -
-                        committed -
-                        state.policy.reserveCents -
-                        simSpend * 100 <
-                      0
-                        ? "This payout would push your vault below the protected reserve floor. Deposit more USDC or hold this invoice."
-                        : "Your live vault has sufficient buffer to absorb this payout while protecting your reserve floor."}
-                    </p>
                     <button
                       className="qv2-reset"
                       onClick={() => {
-                        setSimSpend(4);
+                        setSimSpend(5);
                         setSimRevenue(0);
                       }}
                     >
-                      Reset sliders ↺
+                      Reset ↺
                     </button>
                   </div>
                 </div>
@@ -1960,52 +1513,51 @@ export default function Console() {
               <>
                 <div className="page-lead">
                   <div>
-                    <div className="small-heading">SMART CONTRACT GUARDRAILS</div>
-                    <h1>What the agent can and cannot do.</h1>
-                    <p>
-                      On-chain spending limits enforced by <code>QuorailVault.sol</code> on Arc Testnet.
-                    </p>
+                    <div className="small-heading">ON-CHAIN POLICY</div>
+                    <h1>
+                      Vault <em>Guardrails.</em>
+                    </h1>
                   </div>
                   <button className="btn btn-dark" onClick={() => setShowReserveModal(true)}>
-                    <SlidersHorizontal size={17} /> Edit Reserve Floor
+                    <SlidersHorizontal size={17} /> Edit Reserve
                   </button>
                 </div>
                 <div className="policy-grid">
                   {[
                     {
-                      name: "Protected reserve floor",
+                      name: "Reserve floor",
                       value: usd(state.policy.reserveCents),
-                      desc: "Minimum USDC operating buffer preserved before discretionary payouts are approved.",
+                      desc: "Protected operating floor.",
                       icon: Lock,
                     },
                     {
-                      name: "Autonomous payment ceiling",
+                      name: "Autonomous cap",
                       value: usd(state.policy.autonomousLimitCents),
-                      desc: "Maximum single payout the agent can execute autonomously without owner co-signing.",
+                      desc: "Max single agent payout.",
                       icon: Zap,
                     },
                     {
-                      name: "Hard single payment cap",
+                      name: "Single tx ceiling",
                       value: usd(state.policy.singleLimitCents),
-                      desc: "Contract-enforced ceiling for any single transaction out of QuorailVault.sol.",
+                      desc: "Hard contract per-payment cap.",
                       icon: Shield,
                     },
                     {
-                      name: "Daily expenditure cap",
+                      name: "Daily cap",
                       value: usd(state.policy.dailyLimitCents),
-                      desc: "24-hour rolling USDC budget enforced on-chain by the vault contract.",
+                      desc: "24h rolling USDC budget.",
                       icon: Clock3,
                     },
                     {
-                      name: "Consequence horizon",
+                      name: "Horizon window",
                       value: `${state.policy.horizonDays} days`,
-                      desc: "Lookahead window used to sum competing obligations before approving a payout.",
+                      desc: "Commitment lookahead window.",
                       icon: SlidersHorizontal,
                     },
                     {
-                      name: "Allowlisted recipients",
+                      name: "Allowed recipients",
                       value: state.policy.allowedRecipients.length.toString(),
-                      desc: "Verified recipient wallets authorized on-chain in QuorailVault.sol.",
+                      desc: "On-chain approved addresses.",
                       icon: CheckCircle2,
                     },
                   ].map((p, i) => {
@@ -2013,7 +1565,7 @@ export default function Console() {
                     return (
                       <div className="policy-card" key={p.name}>
                         <div className="policy-header">
-                          <span>0{i + 1} / GUARDRAIL</span>
+                          <span>0{i + 1}</span>
                           <Icon size={19} />
                         </div>
                         <strong>{p.value}</strong>
@@ -2030,15 +1582,11 @@ export default function Console() {
               <>
                 <div className="page-lead">
                   <div>
-                    <div className="small-heading">AUDIT LOG / ON-CHAIN & ENGINE EVENTS</div>
-                    <h1>The decision history.</h1>
-                    <p>
-                      Chronological record of on-chain vault verifications, deposits, obligation registrations, AI evaluations, and Arc USDC settlements.
-                    </p>
+                    <div className="small-heading">AUDIT TRAIL</div>
+                    <h1>
+                      Activity <em>Log.</em>
+                    </h1>
                   </div>
-                  <button className="btn btn-dark" onClick={exportAuditJson}>
-                    <Download size={16} /> Export Audit JSON
-                  </button>
                 </div>
                 <div className="qv2-timeline">
                   {(state.audit || []).length ? (
@@ -2055,10 +1603,7 @@ export default function Console() {
                   ) : (
                     <div className="qv2-timeline-empty">
                       <GitBranch size={38} />
-                      <h2>Syncing on-chain activity…</h2>
-                      <p>
-                        Deposit USDC, register an obligation, or run the Agent Cycle to log live treasury events.
-                      </p>
+                      <h2>No activity yet.</h2>
                     </div>
                   )}
                 </div>
@@ -2066,12 +1611,107 @@ export default function Console() {
             )}
 
             <div className="console-bottom">
-              <span>QUORAIL / CONSEQUENCE ENGINE v4.7 · ARC TESTNET</span>
-              <span>VAULT: {activeVault}</span>
+              <span>QUORAIL v4.7 · ARC TESTNET</span>
+              <span>VAULT: {state.vaultAddress || DEFAULT_VAULT_ADDRESS}</span>
             </div>
           </motion.div>
         </AnimatePresence>
       </main>
+
+      {/* CLAIM ARC TESTNET USDC FAUCET MODAL */}
+      <AnimatePresence>
+        {showFaucet && (
+          <motion.div
+            className="modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowFaucet(false)}
+          >
+            <motion.div
+              className="obligation-modal"
+              initial={{ opacity: 0, x: 70 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 70 }}
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Claim Arc Testnet USDC"
+            >
+              <div className="modal-head">
+                <div>
+                  <span className="small-heading">ARC TESTNET FAUCET (CHAIN 5042002)</span>
+                  <h2>Claim Testnet USDC.</h2>
+                </div>
+                <button onClick={() => setShowFaucet(false)} aria-label="Close">
+                  <X size={19} />
+                </button>
+              </div>
+              <p className="modal-intro">
+                Get free Arc Testnet USDC to test the Consequence Engine, run the AI agent, and settle transactions on-chain.
+              </p>
+
+              <form onSubmit={handleClaimFaucet} className="obligation-form">
+                <label>
+                  RECIPIENT WALLET OR VAULT ADDRESS
+                  <input
+                    required
+                    placeholder="0x..."
+                    value={faucetAddress || connectedAddr || state.vaultAddress || DEFAULT_VAULT_ADDRESS}
+                    onChange={(e) => setFaucetAddress(e.target.value)}
+                  />
+                </label>
+                <button className="btn btn-dark" disabled={working} type="submit">
+                  <Droplets size={17} />
+                  {working ? "Requesting USDC..." : "Instant Claim ($5.00 Test Workspace + Drip)"}
+                </button>
+              </form>
+
+              <div
+                style={{
+                  marginTop: "20px",
+                  paddingTop: "16px",
+                  borderTop: "1px solid rgba(25,22,19,0.12)",
+                  display: "grid",
+                  gap: "10px",
+                }}
+              >
+                <span className="small-heading">OFFICIAL EXTERNAL ARC FAUCETS (FOR WALLET GAS)</span>
+                <a
+                  href="https://faucet.circle.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn"
+                  style={{
+                    border: "1px solid rgba(25,22,19,0.2)",
+                    justifyContent: "space-between",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <span>1. Circle Official USDC Faucet (Select Arc Testnet)</span>
+                  <ExternalLink size={15} />
+                </a>
+                <a
+                  href="https://thirdweb.com/arc-testnet"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn"
+                  style={{
+                    border: "1px solid rgba(25,22,19,0.2)",
+                    justifyContent: "space-between",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <span>2. Thirdweb Arc Testnet Faucet (1 USDC/day)</span>
+                  <ExternalLink size={15} />
+                </a>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* DEPOSIT USDC TO VAULT MODAL */}
       <AnimatePresence>
@@ -2091,56 +1731,20 @@ export default function Console() {
               onClick={(e) => e.stopPropagation()}
               role="dialog"
               aria-modal="true"
-              aria-label="Deposit USDC to Quorail Vault"
+              aria-label="Deposit USDC"
             >
               <div className="modal-head">
                 <div>
-                  <span className="small-heading">FUND TREASURY VAULT · ARC TESTNET</span>
+                  <span className="small-heading">FUND QUORAILVAULT.SOL</span>
                   <h2>Deposit USDC.</h2>
                 </div>
                 <button onClick={() => setShowDeposit(false)} aria-label="Close">
                   <X size={19} />
                 </button>
               </div>
-              <p className="modal-intro">
-                Transfer Arc Testnet USDC directly from your connected wallet into{" "}
-                <code>QuorailVault.sol</code> to increase your live operating capital.
-              </p>
-              <div
-                style={{
-                  background: "rgba(25,22,19,0.05)",
-                  padding: "14px",
-                  borderRadius: "8px",
-                  marginBottom: "16px",
-                  fontSize: "13px",
-                  display: "grid",
-                  gap: "8px",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", flexWrap: "wrap" }}>
-                  <span>
-                    <strong>Target Vault:</strong> <code>{shortAddr(activeVault)}</code>
-                  </span>
-                  <button
-                    type="button"
-                    className="qr-copy-btn"
-                    onClick={() => copyToClipboard(activeVault, "modalVault")}
-                  >
-                    {copiedText === "modalVault" ? <Check size={12} /> : <Copy size={12} />}
-                    {copiedText === "modalVault" ? "Copied" : "Copy Address"}
-                  </button>
-                </div>
-                <div>
-                  <strong>Current Vault Balance:</strong> {usd(state.balanceCents)} USDC
-                </div>
-                <div>
-                  <strong>Your Wallet Balance:</strong>{" "}
-                  {walletUsdcCents !== null ? `${usd(walletUsdcCents)} USDC` : "Connected on Arc Testnet"}
-                </div>
-              </div>
               <form onSubmit={handleDepositUsdc} className="obligation-form">
                 <label>
-                  QUICK AMOUNT PRESETS
+                  PRESET AMOUNT
                   <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
                     {["1.00", "5.00", "10.00", "25.00"].map((preset) => (
                       <button
@@ -2155,8 +1759,7 @@ export default function Console() {
                             depositAmount === preset
                               ? "2px solid #191613"
                               : "1px solid rgba(25,22,19,0.2)",
-                          background:
-                            depositAmount === preset ? "#191613" : "transparent",
+                          background: depositAmount === preset ? "#191613" : "transparent",
                           color: depositAmount === preset ? "#f7f3eb" : "inherit",
                           fontWeight: 600,
                           cursor: "pointer",
@@ -2168,7 +1771,7 @@ export default function Console() {
                   </div>
                 </label>
                 <label>
-                  DEPOSIT AMOUNT (USDC)
+                  AMOUNT (USDC)
                   <input
                     required
                     inputMode="decimal"
@@ -2178,8 +1781,7 @@ export default function Console() {
                   />
                 </label>
                 <button className="btn btn-dark" disabled={working} type="submit">
-                  {working ? "Confirming on Arc Testnet..." : `Deposit $${depositAmount} USDC to Vault`}{" "}
-                  <ArrowRight size={17} />
+                  {working ? "Confirming..." : `Deposit $${depositAmount} USDC`} <ArrowRight size={17} />
                 </button>
               </form>
             </motion.div>
@@ -2187,7 +1789,7 @@ export default function Console() {
         )}
       </AnimatePresence>
 
-      {/* EDIT PROTECTED RESERVE MODAL */}
+      {/* EDIT RESERVE FLOOR MODAL */}
       <AnimatePresence>
         {showReserveModal && (
           <motion.div
@@ -2205,23 +1807,20 @@ export default function Console() {
               onClick={(e) => e.stopPropagation()}
               role="dialog"
               aria-modal="true"
-              aria-label="Edit Protected Reserve Floor"
+              aria-label="Edit Reserve Floor"
             >
               <div className="modal-head">
                 <div>
-                  <span className="small-heading">TREASURY POLICY</span>
-                  <h2>Protected Reserve Floor.</h2>
+                  <span className="small-heading">TREASURY GUARDRAIL</span>
+                  <h2>Reserve Floor.</h2>
                 </div>
                 <button onClick={() => setShowReserveModal(false)} aria-label="Close">
                   <X size={19} />
                 </button>
               </div>
-              <p className="modal-intro">
-                Set the minimum USDC reserve floor that Quorail must preserve when evaluating incoming payment obligations.
-              </p>
               <form onSubmit={handleUpdateReserve} className="obligation-form">
                 <label>
-                  MINIMUM RESERVE FLOOR (USDC)
+                  MINIMUM RESERVE (USDC)
                   <input
                     required
                     inputMode="decimal"
@@ -2231,7 +1830,7 @@ export default function Console() {
                   />
                 </label>
                 <button className="btn btn-dark" type="submit">
-                  Save Reserve Floor <ArrowRight size={17} />
+                  Save Reserve <ArrowRight size={17} />
                 </button>
               </form>
             </motion.div>
@@ -2261,23 +1860,20 @@ export default function Console() {
             >
               <div className="modal-head">
                 <div>
-                  <span className="small-heading">REGISTER LIVE COMMITMENT</span>
-                  <h2>New obligation.</h2>
+                  <span className="small-heading">NEW COMMITMENT</span>
+                  <h2>Add obligation.</h2>
                 </div>
                 <button onClick={() => setShowForm(false)} aria-label="Close">
                   <X size={19} />
                 </button>
               </div>
-              <p className="modal-intro">
-                Create a payment commitment with a due date and an Arc Testnet recipient address.
-              </p>
               <form onSubmit={saveObligation} className="obligation-form">
                 <label>
-                  PAYMENT DESCRIPTION
+                  DESCRIPTION
                   <input
                     required
                     maxLength={120}
-                    placeholder="e.g. Cloud GPU cluster renewal"
+                    placeholder="e.g. Server renewal"
                     value={form.title}
                     onChange={(e) => setForm({ ...form, title: e.target.value })}
                   />
@@ -2293,25 +1889,13 @@ export default function Console() {
                   />
                 </label>
                 <label>
-                  RECIPIENT WALLET ADDRESS (ARC / EVM)
-                  <div style={{ display: "flex", gap: "6px" }}>
-                    <input
-                      required
-                      style={{ flex: 1 }}
-                      placeholder="0x..."
-                      value={form.recipient}
-                      onChange={(e) => setForm({ ...form, recipient: e.target.value })}
-                    />
-                    {connectedAddr && (
-                      <button
-                        type="button"
-                        className="qr-copy-btn"
-                        onClick={() => setForm({ ...form, recipient: connectedAddr })}
-                      >
-                        Use my wallet
-                      </button>
-                    )}
-                  </div>
+                  RECIPIENT ADDRESS (0x...)
+                  <input
+                    required
+                    placeholder="0x..."
+                    value={form.recipient}
+                    onChange={(e) => setForm({ ...form, recipient: e.target.value })}
+                  />
                 </label>
                 <div className="form-two">
                   <label>
@@ -2371,7 +1955,7 @@ export default function Console() {
                   </label>
                 </div>
                 <button className="btn btn-dark" disabled={working} type="submit">
-                  {working ? "Saving..." : "Register obligation"} <ArrowRight size={17} />
+                  {working ? "Saving..." : "Save obligation"} <ArrowRight size={17} />
                 </button>
               </form>
             </motion.div>
@@ -2397,11 +1981,11 @@ function ObligationTable({
         <thead>
           <tr>
             <th>COMMITMENT</th>
-            <th>DUE DATE</th>
+            <th>DUE</th>
             <th>PRIORITY</th>
             <th>STATUS</th>
             <th className="right">AMOUNT</th>
-            {onDelete && <th className="right">ACTION</th>}
+            {onDelete && <th className="right"></th>}
           </tr>
         </thead>
         <tbody>
@@ -2411,7 +1995,7 @@ function ObligationTable({
                 <td>
                   <div className="obligation-title">{o.title}</div>
                   <div className="obligation-company">
-                    {o.counterparty} · {o.category} ·{" "}
+                    {o.counterparty} ·{" "}
                     <code>
                       {o.recipient.slice(0, 6)}…{o.recipient.slice(-4)}
                     </code>
@@ -2441,13 +2025,13 @@ function ObligationTable({
                   <td className="right">
                     <button
                       type="button"
-                      title="Remove obligation"
+                      title="Remove"
                       onClick={() => onDelete(o.id)}
                       style={{
                         background: "transparent",
                         border: "none",
                         cursor: "pointer",
-                        opacity: 0.65,
+                        opacity: 0.6,
                         padding: "4px 8px",
                       }}
                     >
@@ -2460,7 +2044,7 @@ function ObligationTable({
           ) : (
             <tr>
               <td colSpan={onDelete ? 6 : 5} className="empty-table">
-                No active obligations registered.{" "}
+                No pending obligations.{" "}
                 {onAdd && (
                   <button
                     type="button"
@@ -2473,10 +2057,9 @@ function ObligationTable({
                       cursor: "pointer",
                     }}
                   >
-                    + Add a custom obligation
+                    + Add obligation
                   </button>
-                )}{" "}
-                or click any Quick-Test Scenario card above.
+                )}
               </td>
             </tr>
           )}
