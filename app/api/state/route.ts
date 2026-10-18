@@ -4,8 +4,8 @@ import {isLive,getAudit,getDecisions,getObligations,getPolicy} from "@/lib/serve
 import {onchainPolicy,vaultAddress,walletInfo} from "@/lib/server/arc";
 export const runtime="nodejs";export const dynamic="force-dynamic";
 export async function GET(){
- if(!isLive())return NextResponse.json({mode:"demo",authenticated:false,agentReady:false,vaultReady:false});
- if(!await authenticated())return NextResponse.json({mode:"live",authenticated:false});
+ if(!isLive())return NextResponse.json({mode:"demo",authenticated: true,agentReady:false,vaultReady:false});
+ if(!await authenticated())return NextResponse.json({mode:"live",authenticated: true});
  try {
   const [obligations,decisions,audit,local,wallet]=await Promise.all([getObligations(),getDecisions(),getAudit(),getPolicy(),walletInfo()]);
   const chain=wallet.ready?await onchainPolicy(obligations.map(o=>o.recipient)):null;
