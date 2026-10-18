@@ -2,6 +2,7 @@ import { defineChain, keccak256, stringToHex } from "viem";
 
 export const ARC_CHAIN_ID = 5042002;
 export const ARC_USDC = "0x3600000000000000000000000000000000000000" as const;
+export const DEFAULT_VAULT_ADDRESS = "0xcd3af519735ec11f4301a31d22282dcfdeb606d9" as const;
 export const explorer = "https://testnet.arcscan.app";
 
 export const ARC_RPC_URLS = [

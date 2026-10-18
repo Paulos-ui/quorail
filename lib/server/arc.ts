@@ -1,7 +1,7 @@
 import dns from "dns";
 import { createPublicClient, createWalletClient, fallback, http, isAddress, getAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { ARC_CHAIN_ID, ARC_USDC, ARC_RPC_URLS, arc, paymentId, toUnits, fromUnits } from "@/lib/core/chain";
+import { ARC_CHAIN_ID, ARC_USDC, DEFAULT_VAULT_ADDRESS, ARC_RPC_URLS, arc, paymentId, toUnits, fromUnits } from "@/lib/core/chain";
 export { ARC_CHAIN_ID, ARC_USDC, explorer, arc, paymentId, toUnits, fromUnits } from "@/lib/core/chain";
 import { usdcAbi, vaultAbi } from "@/lib/core/abi";
 
@@ -32,7 +32,7 @@ export function publicClient() {
 }
 
 export function vaultAddress() {
-  const a = (process.env.VAULT_ADDRESS || process.env.NEXT_PUBLIC_VAULT_ADDRESS || "").trim();
+  const a = (process.env.VAULT_ADDRESS || process.env.NEXT_PUBLIC_VAULT_ADDRESS || DEFAULT_VAULT_ADDRESS || "").trim();
   return isAddress(a) ? (getAddress(a) as `0x${string}`) : null;
 }
 
