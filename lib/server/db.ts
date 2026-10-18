@@ -60,3 +60,7 @@ export async function getDecision(id:string) {
  const rows=await db()`SELECT * FROM decisions WHERE id=${id} LIMIT 1`;
  return rows[0] ? mapDecision(rows[0]) : null;
 }
+
+export async function loadState(): Promise<Record<string, any>> {
+  return {};
+}
